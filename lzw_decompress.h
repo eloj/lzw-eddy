@@ -7,10 +7,10 @@ struct lzwd_state {
 	uint32_t code_width;
 	uint32_t code_mask;
 	uint32_t next_code;
-	int      old_code;
-	bool	 must_reset;
+	uint32_t old_code;
 	uint32_t tree[LZW_MAX_CODE]; // 16K
 
+	bool	 must_reset;
 	size_t readptr;
 	// Bit reservoir, need room for LZW_MAX_CODE_WIDTH*2-1 bits.
 	uint32_t bitres;

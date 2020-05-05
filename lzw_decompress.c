@@ -39,7 +39,7 @@ static inline uint32_t lzw_make_node(uint8_t ch, uint16_t parent, uint16_t len) 
 
 static void lzwd_reset(struct lzwd_state *state) {
 	state->next_code = CODE_FIRST;
-	state->old_code = -1; // previous code
+	state->old_code = CODE_EOF;
 	state->code_width = 9;
 	state->code_mask = (1UL << state->code_width) - 1;
 	state->must_reset = false;
@@ -89,12 +89,12 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 
 		if (code <= state->next_code) {
 			bool known_code = code < state->next_code;
-			uint16_t tcode = known_code ? code : (uint16_t)state->old_code;
+			uint16_t tcode = known_code ? code : state->old_code;
 			size_t prefix_len = lzw_node_prefix_len(state->tree[tcode]);
 			uint8_t ch;
 
 			// Assert invalid state.
-			assert(!(!known_code && state->old_code == -1));
+			assert(!(!known_code && state->old_code == CODE_EOF));
 
 			// Check if room in output buffer, else return early.
 			if (wptr + prefix_len + 2 > dlen) {
@@ -110,7 +110,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			wptr += prefix_len + 1;
 
 			// Add the first character of the prefix as a new code with old_code as the parent.
-			if (state->old_code != -1) {
+			if (state->old_code != CODE_EOF) {
 				if (!known_code) {
 					dest[wptr++] = ch; // Special case for new codes.
 					assert(code == state->next_code);
