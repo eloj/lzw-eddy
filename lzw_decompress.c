@@ -6,14 +6,14 @@
 
 #include "lzw_decompress.h"
 
-#define DATA_BITS   8
-#define DATA_SHIFT  0
-#define DATA_MASK   ((1UL << DATA_BITS)-1)
+#define SYMBOL_BITS   8
+#define SYMBOL_SHIFT  0
+#define SYMBOL_MASK   ((1UL << SYMBOL_BITS)-1)
 #define PARENT_BITS 12
-#define PARENT_SHIFT DATA_BITS
+#define PARENT_SHIFT SYMBOL_BITS
 #define PARENT_MASK ((1UL << PARENT_BITS)-1)
 #define PREFIXLEN_BITS 12
-#define PREFIXLEN_SHIFT (PARENT_BITS+DATA_BITS)
+#define PREFIXLEN_SHIFT (PARENT_BITS+SYMBOL_BITS)
 #define PREFIXLEN_MASK ((1UL << PREFIXLEN_BITS)-1)
 
 #define CODE_CLEAR 256
@@ -21,7 +21,7 @@
 #define CODE_FIRST 258
 
 static inline uint8_t lzw_node_data(uint32_t node) {
-	return (node >> DATA_SHIFT) & DATA_MASK;
+	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
 }
 
 static inline uint16_t lzw_node_parent(uint32_t node) {
@@ -32,8 +32,8 @@ static inline uint16_t lzw_node_prefix_len(uint32_t node) {
 	return (node >> PREFIXLEN_SHIFT) & PREFIXLEN_MASK;
 }
 
-static inline uint32_t lzw_make_node(uint8_t ch, uint16_t parent, uint16_t len) {
-	uint32_t node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | (ch << DATA_SHIFT);
+static inline uint32_t lzw_make_node(uint8_t symbol, uint16_t parent, uint16_t len) {
+	uint32_t node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | (symbol << SYMBOL_SHIFT);
 	return node;
 }
 
@@ -91,7 +91,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			bool known_code = code < state->next_code;
 			uint16_t tcode = known_code ? code : state->old_code;
 			size_t prefix_len = lzw_node_prefix_len(state->tree[tcode]);
-			uint8_t ch;
+			uint8_t symbol;
 
 			// Assert invalid state.
 			assert(!(!known_code && state->old_code == CODE_EOF));
@@ -103,8 +103,8 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 
 			// Write out prefix to destination
 			for (size_t i=0 ; i < prefix_len + 1 ; ++i) {
-				ch = lzw_node_data(state->tree[tcode]);
-				dest[wptr + prefix_len - i] = ch;
+				symbol = lzw_node_data(state->tree[tcode]);
+				dest[wptr + prefix_len - i] = symbol;
 				tcode = lzw_node_parent(state->tree[tcode]);
 			}
 			wptr += prefix_len + 1;
@@ -112,11 +112,11 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			// Add the first character of the prefix as a new code with old_code as the parent.
 			if (state->old_code != CODE_EOF) {
 				if (!known_code) {
-					dest[wptr++] = ch; // Special case for new codes.
+					dest[wptr++] = symbol; // Special case for new codes.
 					assert(code == state->next_code);
 				}
 
-				state->tree[state->next_code] = lzw_make_node(ch, state->old_code, 1 + lzw_node_prefix_len(state->tree[state->old_code]));
+				state->tree[state->next_code] = lzw_make_node(symbol, state->old_code, 1 + lzw_node_prefix_len(state->tree[state->old_code]));
 
 				if (state->next_code >= state->code_mask) {
 					if (state->code_width == LZW_MAX_CODE_WIDTH) {
