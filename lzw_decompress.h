@@ -10,11 +10,14 @@
 #define LZW_MAX_CODE_WIDTH 12
 #define LZW_MAX_CODE (1UL << LZW_MAX_CODE_WIDTH)
 
+// This type must be large enough for SYMBOL_BITS + LZW_MAX_CODE_WIDTH*2 bits.
+typedef uint32_t lzw_node;
+
 struct lzwd_state {
 	uint32_t code_width;
 	uint16_t next_code;
 	uint16_t prev_code;
-	uint32_t tree[LZW_MAX_CODE]; // 16K
+	lzw_node tree[LZW_MAX_CODE]; // 16K
 
 	bool	 was_init;
 	bool	 must_reset;

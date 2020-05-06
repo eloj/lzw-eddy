@@ -15,10 +15,10 @@
 #define SYMBOL_BITS 8
 #define SYMBOL_SHIFT 0
 #define SYMBOL_MASK ((1UL << SYMBOL_BITS)-1)
-#define PARENT_BITS 12
+#define PARENT_BITS LZW_MAX_CODE_WIDTH
 #define PARENT_SHIFT SYMBOL_BITS
 #define PARENT_MASK ((1UL << PARENT_BITS)-1)
-#define PREFIXLEN_BITS 12
+#define PREFIXLEN_BITS LZW_MAX_CODE_WIDTH
 #define PREFIXLEN_SHIFT (PARENT_BITS+SYMBOL_BITS)
 #define PREFIXLEN_MASK ((1UL << PREFIXLEN_BITS)-1)
 
@@ -26,20 +26,22 @@
 #define CODE_EOF (CODE_CLEAR+1)
 #define CODE_FIRST (CODE_CLEAR+2)
 
-static inline uint8_t lzw_node_symbol(uint32_t node) {
+static_assert((SYMBOL_BITS + PARENT_BITS + PREFIXLEN_BITS) <= sizeof(lzw_node)*8, "lzw_node type not large enough");
+
+static inline uint8_t lzw_node_symbol(lzw_node node) {
 	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
 }
 
-static inline uint16_t lzw_node_parent(uint32_t node) {
+static inline uint16_t lzw_node_parent(lzw_node node) {
 	return (node >> PARENT_SHIFT) & PARENT_MASK;
 }
 
-static inline uint16_t lzw_node_prefix_len(uint32_t node) {
+static inline uint16_t lzw_node_prefix_len(lzw_node node) {
 	return (node >> PREFIXLEN_SHIFT) & PREFIXLEN_MASK;
 }
 
-static inline uint32_t lzw_make_node(uint8_t symbol, uint16_t parent, uint16_t len) {
-	uint32_t node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | (symbol << SYMBOL_SHIFT);
+static inline lzw_node lzw_make_node(uint8_t symbol, uint16_t parent, uint16_t len) {
+	lzw_node node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | (symbol << SYMBOL_SHIFT);
 	return node;
 }
 
