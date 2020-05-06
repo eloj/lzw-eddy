@@ -18,6 +18,30 @@ which resulted in it being used in [all sorts of places](https://www.giantbomb.c
 * No scratch buffer used when writing out strings.
 * Valgrind clean.
 
+## Usage example
+
+```c
+	#include "lzw_decompress.c"
+
+	struct lzwd_state state = { 0 };
+
+	size_t slen = <length of compressed data>
+	uint8_t *src = <compressed data>;
+	uint8_t dest[4096];
+
+	ssize_t res, written = 0;
+	while ((res = lzw_decompress(&state, src, slen, dest, sizeof(dest))) > 0) {
+		// Process `res` bytes of output in `dest`.
+		fwrite(dest, res, 1, outfile);
+		written += res;
+	}
+	if (res == 0) {
+		printf("%zd bytes successfully decompressed.\n", written);
+	} else if (res < 0) {
+		fprintf(stderr, "Decompression error: %zd\n", res);
+	}
+```
+
 All code is provided under the [MIT License](LICENSE).
 
 [![Build Status](https://travis-ci.org/eloj/lzw-eddy.svg?branch=master)](https://travis-ci.org/eloj/lzw-eddy)
