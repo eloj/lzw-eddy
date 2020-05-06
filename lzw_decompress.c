@@ -12,9 +12,9 @@
 
 #include "lzw_decompress.h"
 
-#define SYMBOL_BITS   8
-#define SYMBOL_SHIFT  0
-#define SYMBOL_MASK   ((1UL << SYMBOL_BITS)-1)
+#define SYMBOL_BITS 8
+#define SYMBOL_SHIFT 0
+#define SYMBOL_MASK ((1UL << SYMBOL_BITS)-1)
 #define PARENT_BITS 12
 #define PARENT_SHIFT SYMBOL_BITS
 #define PARENT_MASK ((1UL << PARENT_BITS)-1)
@@ -22,9 +22,9 @@
 #define PREFIXLEN_SHIFT (PARENT_BITS+SYMBOL_BITS)
 #define PREFIXLEN_MASK ((1UL << PREFIXLEN_BITS)-1)
 
-#define CODE_CLEAR 256
-#define CODE_EOF 257
-#define CODE_FIRST 258
+#define CODE_CLEAR (1UL << SYMBOL_BITS)
+#define CODE_EOF (CODE_CLEAR+1)
+#define CODE_FIRST (CODE_CLEAR+2)
 
 static inline uint8_t lzw_node_symbol(uint32_t node) {
 	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
@@ -50,12 +50,12 @@ static inline uint32_t mask_from_width(uint32_t width) {
 static void lzwd_reset(struct lzwd_state *state) {
 	state->next_code = CODE_FIRST;
 	state->prev_code = CODE_EOF;
-	state->code_width = 9;
+	state->code_width = LZW_MIN_CODE_WIDTH;
 	state->must_reset = false;
 }
 
 void lzwd_init(struct lzwd_state *state) {
-	for (size_t i=0 ; i < 256 ; ++i) {
+	for (size_t i=0 ; i < (1UL << SYMBOL_BITS) ; ++i) {
 		state->tree[i] = lzw_make_node(i, 0, 0);
 	}
 	lzwd_reset(state);
