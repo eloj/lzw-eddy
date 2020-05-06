@@ -2,20 +2,24 @@
 # Simple LZW (Lempel-Ziv-Welch) Decompressor
 
 A basic headerless LZW decompressor. Supports variable length codes
-between 9 and 12 bits per default. Up to 16-bits should work if the
-`LZW_MAX_CODE_WIDTH` define is changed, but this is untested.
+between 9 and 12 bits per default.
 
-This is similar to what's used by GIF, but slightly less flexible.
+Up to 16-bits should work if the `LZW_MAX_CODE_WIDTH` define is changed
+and the `lzw_node` type upgraded to 64 bits, but this is untested.
+
+This is similar to what's used by GIF, if perhaps slightly less flexible.
 
 The algorithm implemented by this code was widely distributed in the
-old days in places like Dr.Dobbs and a popular book on compression,
-which resulted in it being used in [all sorts of places](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/).
+old DOS days in places like Dr.Dobbs and a popular book on compression,
+probably due to its use in GIF. This resulted in it being used in [all sorts of places](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/).
 
-## Features
+## Decompression Features
 
-* Fixed memory requirements. No dynamic memory allocations in decompressor.
-* Re-entrant design. Decompress into a fixed size buffer (~4KiB recommended).
-* No scratch buffer used when writing out strings.
+* Fixed memory requirements:
+	* Uses ~16KiB for state/string table.
+	* ~4KiB destination buffer recommended, but can go much lower in practice.
+	* Low stack usage.
+* No wasteful scratch buffer used when writing out strings.
 * Valgrind clean.
 
 ## Usage example
