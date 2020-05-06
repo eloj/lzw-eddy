@@ -1,3 +1,9 @@
+/*
+	Variable-length code LZW decompressor for fixed-memory decoding.
+	(C)2020 Eddy L O Jansson. Licensed under The MIT License.
+
+	See https://github.com/eloj/lzw-eddy
+*/
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>

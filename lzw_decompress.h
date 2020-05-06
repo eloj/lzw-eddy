@@ -1,3 +1,10 @@
+/*
+	Variable-length code LZW decompressor for fixed-memory decoding.
+	(C)2020 Eddy L O Jansson. Licensed under The MIT License.
+
+	See https://github.com/eloj/lzw-eddy
+*/
+#pragma once
 
 #define LZW_MIN_CODE_WIDTH 9
 #define LZW_MAX_CODE_WIDTH 12
@@ -18,4 +25,3 @@ struct lzwd_state {
 
 void lzwd_init(struct lzwd_state *state);
 ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
-
