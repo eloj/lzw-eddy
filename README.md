@@ -1,13 +1,9 @@
 
 # Simple LZW (Lempel-Ziv-Welch) Decompressor
 
-A basic headerless LZW decompressor. Supports variable length codes
-between 9 and 12 bits per default.
-
-Up to 16-bits should work if the `LZW_MAX_CODE_WIDTH` define is changed
-and the `lzw_node` type upgraded to 64 bits, but this is untested.
-
-This is similar to what's used by GIF, if perhaps slightly less flexible.
+A basic headerless LZW decompressor. Supports variable length codes between
+9 and 12 bits per default. Up to 16-bits should work if the `LZW_MAX_CODE_WIDTH`
+define is changed and the `lzw_node` type upgraded to 64 bits, but this is untested.
 
 The algorithm implemented by this code was widely distributed in the
 old DOS days in places like Dr.Dobbs and a popular book on compression,
@@ -22,7 +18,7 @@ probably due to its use in GIF. This resulted in it being used in [all sorts of 
 * No wasteful scratch buffer used when writing out strings.
 * Valgrind clean.
 
-## Usage example
+## Usage Example
 
 ```c
 	#include "lzw_decompress.c"
