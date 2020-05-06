@@ -2,7 +2,8 @@
 # Simple LZW (Lempel-Ziv-Welch) Decompressor
 
 A basic headerless LZW decompressor. Supports variable length codes
-between 9 and 12 bits.
+between 9 and 12 bits per default. Up to 16-bits should work if the
+`LZW_MAX_CODE_WIDTH` define is changed, but this is untested.
 
 This is similar to what's used by GIF, but slightly less flexible.
 
