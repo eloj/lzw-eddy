@@ -20,7 +20,7 @@
 #define CODE_EOF 257
 #define CODE_FIRST 258
 
-static inline uint8_t lzw_node_data(uint32_t node) {
+static inline uint8_t lzw_node_symbol(uint32_t node) {
 	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
 }
 
@@ -37,11 +37,14 @@ static inline uint32_t lzw_make_node(uint8_t symbol, uint16_t parent, uint16_t l
 	return node;
 }
 
+static inline uint32_t mask_from_width(uint32_t width) {
+	return (1UL << width)-1;
+}
+
 static void lzwd_reset(struct lzwd_state *state) {
 	state->next_code = CODE_FIRST;
-	state->old_code = CODE_EOF;
+	state->prev_code = CODE_EOF;
 	state->code_width = 9;
-	state->code_mask = (1UL << state->code_width) - 1;
 	state->must_reset = false;
 }
 
@@ -65,14 +68,14 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 	while (state->readptr < slen) {
 		// Fill bit-reservoir.
 		while (bitres_len < state->code_width) {
-			bitres = bitres + (src[state->readptr++] << bitres_len);
+			bitres |= src[state->readptr++] << bitres_len;
 			bitres_len += 8;
 		}
 
 		state->bitres = bitres;
 		state->bitres_len = bitres_len;
 
-		code = bitres & state->code_mask;
+		code = bitres & mask_from_width(state->code_width);
 		bitres >>= state->code_width;
 		bitres_len -= state->code_width;
 
@@ -89,12 +92,12 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 
 		if (code <= state->next_code) {
 			bool known_code = code < state->next_code;
-			uint16_t tcode = known_code ? code : state->old_code;
+			uint16_t tcode = known_code ? code : state->prev_code;
 			size_t prefix_len = lzw_node_prefix_len(state->tree[tcode]);
 			uint8_t symbol;
 
 			// Assert invalid state.
-			assert(!(!known_code && state->old_code == CODE_EOF));
+			assert(!(!known_code && state->prev_code == CODE_EOF));
 
 			// Check if room in output buffer, else return early.
 			if (wptr + prefix_len + 2 > dlen) {
@@ -103,35 +106,33 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 
 			// Write out prefix to destination
 			for (size_t i=0 ; i < prefix_len + 1 ; ++i) {
-				symbol = lzw_node_data(state->tree[tcode]);
+				symbol = lzw_node_symbol(state->tree[tcode]);
 				dest[wptr + prefix_len - i] = symbol;
 				tcode = lzw_node_parent(state->tree[tcode]);
 			}
 			wptr += prefix_len + 1;
 
-			// Add the first character of the prefix as a new code with old_code as the parent.
-			if (state->old_code != CODE_EOF) {
+			// Add the first character of the prefix as a new code with prev_code as the parent.
+			if (state->prev_code != CODE_EOF) {
 				if (!known_code) {
 					dest[wptr++] = symbol; // Special case for new codes.
 					assert(code == state->next_code);
 				}
 
-				state->tree[state->next_code] = lzw_make_node(symbol, state->old_code, 1 + lzw_node_prefix_len(state->tree[state->old_code]));
+				state->tree[state->next_code] = lzw_make_node(symbol, state->prev_code, 1 + lzw_node_prefix_len(state->tree[state->prev_code]));
 
-				if (state->next_code >= state->code_mask) {
+				if (state->next_code >= mask_from_width(state->code_width)) {
 					if (state->code_width == LZW_MAX_CODE_WIDTH) {
 						// Out of bits in code, next code MUST be a reset!
 						state->must_reset = true;
-						state->old_code = code;
+						state->prev_code = code;
 						continue;
 					}
-					state->code_mask <<= 1;
-					++state->code_mask;
 					++state->code_width;
 				}
 				state->next_code++;
 			}
-			state->old_code = code;
+			state->prev_code = code;
 		} else {
 			// Desynchronized, probably corrupt input.
 			return -2;

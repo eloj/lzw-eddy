@@ -5,9 +5,8 @@
 
 struct lzwd_state {
 	uint32_t code_width;
-	uint32_t code_mask;
 	uint16_t next_code;
-	uint16_t old_code;
+	uint16_t prev_code;
 	uint32_t tree[LZW_MAX_CODE]; // 16K
 
 	bool	 must_reset;
