@@ -33,9 +33,10 @@ struct lzwd_state {
 //
 // `state`should be zero-initialized.
 //
-// `dlen` should be at least 4096 bytes, unless the input
-// is known to require less. Technically, we need room
-// for the longest prefix used.
+// `dlen` should be at least 4096 bytes, unless the input is known to
+// require less. Technically, we need room for the longest prefix used.
+// -1 will be returned if the output buffer is too small for a prefix,
+// in which case you'd have to restart from the beginning with a larger `dest`.
 //
 // `src` and `slen` should not change between calls.
 //

@@ -109,6 +109,11 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			// Assert invalid state.
 			assert(!(!known_code && state->prev_code == CODE_EOF));
 
+			// Check if prefix alone too large for output buffer. User could try again with a larger buffer.
+			if (prefix_len + 2 > dlen) {
+				return -1;
+			}
+
 			// Check if room in output buffer, else return early.
 			if (wptr + prefix_len + 2 > dlen) {
 				return wptr;
