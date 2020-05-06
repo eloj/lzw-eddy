@@ -58,16 +58,15 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 		printf("Decompressing %zu bytes.\n", slen);
 		FILE *ofile = fopen(destfile, "wb");
 		if (ofile) {
-			size_t dlen = 8192;
 			uint8_t *src = malloc(slen);
-			uint8_t *dest = malloc(dlen);
+			uint8_t dest[4096];
 			fread(src, slen, 1, ifile);
 
 			struct lzwd_state state = { 0 };
 
 			ssize_t res, written = 0;
 			// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.
-			while ((res = lzw_decompress(&state, src, slen, dest, dlen)) > 0) {
+			while ((res = lzw_decompress(&state, src, slen, dest, sizeof(dest))) > 0) {
 				fwrite(dest, res, 1, ofile);
 				written += res;
 			}
@@ -77,7 +76,6 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				fprintf(stderr, "Decompressor returned error %zd\n", res);
 			}
 			fclose(ofile);
-			free(dest);
 			free(src);
 		}
 	}
