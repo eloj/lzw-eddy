@@ -54,22 +54,26 @@ static void lzwd_reset(struct lzwd_state *state) {
 	state->must_reset = false;
 }
 
-void lzwd_init(struct lzwd_state *state) {
+static void lzwd_init(struct lzwd_state *state) {
 	for (size_t i=0 ; i < (1UL << SYMBOL_BITS) ; ++i) {
 		state->tree[i] = lzw_make_node(i, 0, 0);
 	}
-	lzwd_reset(state);
 	state->readptr = 0;
 	state->bitres = 0;
 	state->bitres_len = 0;
+	state->was_init = true;
+	lzwd_reset(state);
 }
 
 ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen) {
-	uint32_t code = 0;
-	size_t wptr = 0;
+	if (state->was_init == false)
+		lzwd_init(state);
 
 	uint32_t bitres = state->bitres;
 	uint32_t bitres_len = state->bitres_len;
+
+	uint32_t code = 0;
+	size_t wptr = 0;
 
 	while (state->readptr < slen) {
 		// Fill bit-reservoir.

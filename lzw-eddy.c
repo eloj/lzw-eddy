@@ -55,32 +55,31 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 	fseek(ifile, 0, SEEK_SET);
 
 	if (slen > 0) {
-		size_t dlen = 8192;
-		uint8_t *src = malloc(slen);
-		uint8_t *dest = malloc(dlen);
-
-		fread(src, slen, 1, ifile);
-
 		printf("Decompressing %zu bytes.\n", slen);
-		struct lzwd_state state = { };
-		lzwd_init(&state);
-
 		FILE *ofile = fopen(destfile, "wb");
-		ssize_t res;
-		while ((res = lzw_decompress(&state, src, slen, dest, dlen)) >= 0) {
-			if (res == 0) {
-				break;
-			}
-			// printf("res=%zd\n", res);
-			fwrite(dest, res, 1, ofile);
-		}
-		if (res < 0) {
-			fprintf(stderr, "Decompressor returned error %zd\n", res);
-		}
-		fclose(ofile);
+		if (ofile) {
+			size_t dlen = 8192;
+			uint8_t *src = malloc(slen);
+			uint8_t *dest = malloc(dlen);
+			fread(src, slen, 1, ifile);
 
-		free(dest);
-		free(src);
+			struct lzwd_state state = { 0 };
+
+			ssize_t res, written = 0;
+			// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.
+			while ((res = lzw_decompress(&state, src, slen, dest, dlen)) > 0) {
+				fwrite(dest, res, 1, ofile);
+				written += res;
+			}
+			if (res == 0) {
+				printf("%zd bytes written to output.\n", written);
+			} else if (res < 0) {
+				fprintf(stderr, "Decompressor returned error %zd\n", res);
+			}
+			fclose(ofile);
+			free(dest);
+			free(src);
+		}
 	}
 	fclose(ifile);
 }
