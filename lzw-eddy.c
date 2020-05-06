@@ -71,7 +71,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				written += res;
 			}
 			if (res == 0) {
-				printf("%zd bytes written to output.\n", written);
+				printf("%zd bytes written to output (longest prefix=%zu).\n", written, state.longest_prefix);
 			} else if (res < 0) {
 				fprintf(stderr, "Decompressor returned error %zd\n", res);
 			}

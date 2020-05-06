@@ -13,8 +13,8 @@ which resulted in it being used in [all sorts of places](https://www.giantbomb.c
 
 ## Features
 
-* No dynamic memory allocations in decompressor.
-* Re-entrant design. Decompress into a fixed size buffer (minimum 4096 bytes recommended).
+* Fixed memory requirements. No dynamic memory allocations in decompressor.
+* Re-entrant design. Decompress into a fixed size buffer (~4KiB recommended).
 * No scratch buffer used when writing out strings.
 * Valgrind clean.
 
