@@ -16,7 +16,7 @@ probably due to its use in GIF. This resulted in it being used in [all sorts of 
 	* ~4KiB destination buffer recommended, but can go much lower in practice.
 	* Low stack usage.
 * No wasteful scratch buffer used when writing out strings.
-* Valgrind clean.
+* [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean.
 
 ## Usage Example
 
