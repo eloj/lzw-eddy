@@ -108,11 +108,15 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			size_t prefix_len = lzw_node_prefix_len(state->tree[tcode]);
 			uint8_t symbol;
 
-			// Assert invalid state.
-			assert(!(!known_code && state->prev_code == CODE_EOF));
+			// Invalid state, invalid input.
+			if (!known_code && state->prev_code == CODE_EOF) {
+				return -2;
+			}
 
-			if (prefix_len + 2 > state->longest_prefix)
+			// Track max output buffer size required. This isn't necessary, but nice to have.
+			if (prefix_len + 2 > state->longest_prefix) {
 				state->longest_prefix = prefix_len + 2;
+			}
 
 			// Check if prefix alone too large for output buffer. User could try again with a larger buffer.
 			if (prefix_len + 2 > dlen) {
@@ -154,7 +158,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			}
 			state->prev_code = code;
 		} else {
-			// Desynchronized, probably corrupt input.
+			// Desynchronized, probably corrupt/invalid input.
 			return -2;
 		}
 	}
