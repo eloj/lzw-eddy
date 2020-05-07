@@ -38,7 +38,7 @@ probably due to its use in GIF. This resulted in it being used in [all sorts of 
 	if (res == 0) {
 		printf("%zd bytes successfully decompressed.\n", written);
 	} else if (res < 0) {
-		fprintf(stderr, "Decompression error: %zd\n", res);
+		fprintf(stderr, "Decompression error: %s (err:%zd)\n", lzwd_strerror(res), res);
 	}
 ```
 
