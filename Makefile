@@ -22,15 +22,21 @@ endif
 CFLAGS=-std=c11 $(OPT) $(CWARNFLAGS) $(WARNFLAGS) $(MISCFLAGS)
 CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(MISCFLAGS)
 
-.PHONY: clean test
+.PHONY: clean test fuzz
 
 all: lzw-eddy
 
 lzw-eddy: lzw-eddy.c lzw_decompress.c lzw_decompress.h
 	$(CC) $(CFLAGS) $< -o $@
 
+afl-decompress-driver: fuzzing/afl_decompress_driver.c lzw_decompress.c lzw_decompress.h
+	afl-gcc $(CFLAGS) fuzzing/afl_decompress_driver.c -o $@
+
+fuzz: afl-decompress-driver
+	AFL_SKIP_CPUFREQ=1 afl-fuzz -i tests -o findings -- ./afl-decompress-driver
+
 test: lzw-eddy
 	${TEST_PREFIX} ./run-tests.sh
 
 clean:
-	rm -f lzw-eddy core core.*
+	rm -f lzw-eddy afl-decompress-driver core core.*
