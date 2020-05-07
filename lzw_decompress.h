@@ -10,6 +10,13 @@
 #define LZW_MAX_CODE_WIDTH 12
 #define LZW_MAX_CODE (1UL << LZW_MAX_CODE_WIDTH)
 
+enum lzwd_errors {
+	LZWD_NOERROR = 0,
+	LZWD_DESTINATION_TOO_SMALL = -1,
+	LZWD_INVALID_CODE_STREAM = -2,
+	LZWD_STRING_TABLE_FULL = -3,
+};
+
 // This type must be large enough for SYMBOL_BITS + LZW_MAX_CODE_WIDTH*2 bits.
 typedef uint32_t lzw_node;
 
@@ -30,6 +37,9 @@ struct lzwd_state {
 	// Tracks the longest prefix used, which is equal to the minimum output buffer required for decompression.
 	size_t longest_prefix;
 };
+
+// Translate error code to message.
+const char *lzwd_strerror(enum lzwd_errors errnum);
 
 /*
 	Decompress `slen` bytes from `src` into `dest` of size `dlen`.

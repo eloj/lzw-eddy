@@ -67,6 +67,27 @@ static void lzwd_init(struct lzwd_state *state) {
 	lzwd_reset(state);
 }
 
+const char *lzwd_strerror(enum lzwd_errors errnum) {
+	const char *errstr = "Unknown error";
+
+	switch (errnum) {
+		case LZWD_NOERROR:
+			errstr = "No error";
+			break;
+		case LZWD_DESTINATION_TOO_SMALL:
+			errstr = "Destination buffer too small";
+			break;
+		case LZWD_INVALID_CODE_STREAM:
+			errstr = "Invalid code stream";
+			break;
+		case LZWD_STRING_TABLE_FULL:
+			errstr = "String table full";
+			break;
+
+	}
+	return errstr;
+};
+
 ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen) {
 	if (state->was_init == false)
 		lzwd_init(state);
@@ -99,7 +120,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			break;
 		} else if (state->must_reset) {
 			// ERROR: Ran out of space in string table
-			return -3;
+			return LZWD_STRING_TABLE_FULL;
 		}
 
 		if (code <= state->next_code) {
@@ -110,7 +131,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 
 			// Invalid state, invalid input.
 			if (!known_code && state->prev_code == CODE_EOF) {
-				return -2;
+				return LZWD_INVALID_CODE_STREAM;
 			}
 
 			// Track max output buffer size required. This isn't necessary, but nice to have.
@@ -120,7 +141,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 
 			// Check if prefix alone too large for output buffer. User could try again with a larger buffer.
 			if (prefix_len + 2 > dlen) {
-				return -1;
+				return LZWD_DESTINATION_TOO_SMALL;
 			}
 
 			// Check if room in output buffer, else return early.
@@ -159,7 +180,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			state->prev_code = code;
 		} else {
 			// Desynchronized, probably corrupt/invalid input.
-			return -2;
+			return LZWD_INVALID_CODE_STREAM;
 		}
 	}
 	return wptr;
