@@ -6,6 +6,7 @@
 */
 #pragma once
 
+// Going outside of 9- to 12-bit codes is untested, and beyond 16-bit codes will require code changes.
 #define LZW_MIN_CODE_WIDTH 9
 #define LZW_MAX_CODE_WIDTH 12
 #define LZW_MAX_CODE (1UL << LZW_MAX_CODE_WIDTH)
@@ -19,19 +20,20 @@ enum lzwd_errors {
 
 // This type must be large enough for SYMBOL_BITS + LZW_MAX_CODE_WIDTH*2 bits.
 typedef uint32_t lzw_node;
+typedef uint32_t bitres_t;
 
 struct lzwd_state {
 	uint32_t code_width;
 	uint16_t next_code;
 	uint16_t prev_code;
-	lzw_node tree[LZW_MAX_CODE]; // 16K
+	lzw_node tree[LZW_MAX_CODE]; // 16K at 12-bit codes.
 
 	bool	 was_init;
 	bool	 must_reset;
 
 	size_t readptr;
 	// Bit reservoir, need room for LZW_MAX_CODE_WIDTH*2-1 bits.
-	uint32_t bitres;
+	bitres_t bitres;
 	uint32_t bitres_len;
 
 	// Tracks the longest prefix used, which is equal to the minimum output buffer required for decompression.

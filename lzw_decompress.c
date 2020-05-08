@@ -26,7 +26,8 @@
 #define CODE_EOF (CODE_CLEAR+1)
 #define CODE_FIRST (CODE_CLEAR+2)
 
-static_assert((SYMBOL_BITS + PARENT_BITS + PREFIXLEN_BITS) <= sizeof(lzw_node)*8, "lzw_node type not large enough");
+static_assert((SYMBOL_BITS + PARENT_BITS + PREFIXLEN_BITS) <= sizeof(lzw_node)*8, "lzw_node type too small");
+static_assert((LZW_MAX_CODE_WIDTH*2 - 1) < sizeof(bitres_t)*8, "bitres_t type too small");
 
 static inline uint8_t lzw_node_symbol(lzw_node node) {
 	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
