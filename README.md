@@ -9,6 +9,9 @@ The algorithm implemented by this code was widely distributed in the
 old DOS days in places like Dr.Dobbs and a popular book on compression,
 probably due to its use in GIF. This resulted in it being used in [all sorts of places](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/).
 
+This code was developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
+by Steve Blackstock as a reference.
+
 ## Decompression Features
 
 * Fixed memory requirements:
