@@ -59,7 +59,5 @@ const char *lzwd_strerror(enum lzwd_errors errnum);
 	All that said, even a file consisting of 80K zeros requires only 400 bytes,
 	so we're being very conservative here. A 'normal' file may need only
 	128 bytes or so.
-
-	`src` and `slen` should not change between calls.
 */
 ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
