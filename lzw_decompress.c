@@ -207,10 +207,18 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 }
 
 static bool lzw_string_table_lookup(struct lzwc_state *state, uint8_t *prefix, size_t len, uint16_t *code) {
-	printf("Looking up prefix from %p to %p (len=%zu)\n", prefix, prefix+len, len);
+	printf("Looking up prefix '%.*s' from %p to %p (len=%zu)\n", (int)(len), prefix, prefix, prefix+len, len);
 	if (len == 1) {
 		*code = state->tree.node[*prefix];
 		return true;
+	}
+
+	// TODO: Use dumb loop to scan for match.
+	if (len == 2) {
+		if (prefix[0]=='A' && prefix[1] == 'B' && state->tree.next_code > 258) {
+			*code = 258;
+			return true;
+		}
 	}
 
 	return false;
@@ -221,8 +229,6 @@ static void lzw_output_code(struct lzwc_state *state, uint16_t code) {
 	assert(state->bitres_len + state->tree.code_width < sizeof(bitres_t)*8);
 	state->bitres |= code << state->bitres_len;
 	state->bitres_len += state->tree.code_width;
-
-	state->tree.prev_code = code;
 
 	printf("<CODE:%d width=%d reservoir:%02d/%zu:%02x>\n", code, state->tree.code_width, state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 }
@@ -253,44 +259,84 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 		lzw_output_code(state, CODE_CLEAR);
 	}
 
-	uint16_t code = 0;
+	uint16_t code = CODE_EOF;
 	size_t prefix_end = 0;
 	state->wptr = 0;
 
+	size_t old_wptr = 0; // DEBUG AID.
+	printf("XXXXXXXX: ON ENTRY PREV CODE = %d\n", state->tree.prev_code);
+
 	while (state->readptr + prefix_end < slen) {
+		// printf("Reading input..\n");
+
 		// Ensure we have enough space for flushing codes.
 		if (state->wptr + (state->tree.code_width >> 3) + 1 + 2 > dlen) { // Also reserve bits for 16-bit EOF code.
+			printf("**EARLY OUT DUE TO DEST OVERFLOW**\n");
 			return state->wptr;
 		}
+		old_wptr = state->wptr;
 
 		++prefix_end;
 		// lookup prefix in string table
 		bool existing_code = lzw_string_table_lookup(state, src + state->readptr, prefix_end, &code);
 		// if not found, add prefix rooted at state->prev_code
 		if (!existing_code) {
-			printf("New prefix, adding code %d /w parent %d\n", state->tree.next_code, state->tree.prev_code);
+			assert(code != CODE_CLEAR);
+			assert(code != CODE_EOF);
 
-			state->readptr += prefix_end;
+			uint8_t symbol = src[state->readptr + prefix_end - 1];
+			uint16_t parent = code;
+			uint16_t parent_len = lzw_node_prefix_len(state->tree.node[parent]);
+
+			printf("New prefix from %zu, adding symbol '%c' (%02x) as code %d /w parent %d\n", state->readptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
+			state->tree.node[state->tree.next_code] = lzw_make_node(symbol, parent, parent_len + 1);
+			if (parent_len >= state->longest_prefix) {
+				state->longest_prefix = parent_len + 1;
+			}
+			state->tree.prev_code = state->tree.next_code;
+			state->tree.next_code++;
+			// TODO: Handle code bit expansion (share code with decoder?)
+
+
+			state->readptr += prefix_end - 1; // a.k.a parent_len
 			prefix_end = 0;
+
+			lzw_output_code(state, parent);
+			lzw_flush_reservoir(state, dest, false);
 		} else {
-			printf("Found prefix as code %d\n", code);
-			state->readptr += prefix_end;
-			prefix_end = 0;
+			printf("Found prefix '%.*s' as code %d\n", (int)(prefix_end - state->readptr), src + state->readptr, code);
 		}
-		lzw_output_code(state, code);
-
-		lzw_flush_reservoir(state, dest, false);
-		break; // This tests
+		// break; // This tests re-entrancy
+		//
+		// printf("<iteration readptr:%zu + prefix_end:%zu < %zu slen == %d>\n", state->readptr, prefix_end, slen, (state->readptr + prefix_end) < slen);
 	}
+	if (prefix_end != 0) {
+		printf("**Last prefix existed, writing existing code %d to stream**\n", code);
+		lzw_output_code(state, code); // or just 'code' I guess..
+		lzw_flush_reservoir(state, dest, false);
+		state->tree.prev_code = code;
+		state->readptr += prefix_end;
+		prefix_end = 0;
+	}
+
 	// WARN: Problem with this is that we can't chain encodes, add 'final' flag to compression call?
-	if (state->readptr + prefix_end == slen && state->tree.prev_code != CODE_EOF) {
+	// NIGHTMARE: Handle zero-input
+	if ((state->readptr + prefix_end == slen && state->tree.prev_code != CODE_EOF)
+		// This happens to be true if we're called with slen=0, but only the first time as we now flush the bits.
+		|| (state->wptr == 0 && state->bitres_len > 0)) {
+		printf("**Writing EOF**\n");
 		lzw_output_code(state, CODE_EOF);
 		lzw_flush_reservoir(state, dest, true);
+		state->tree.prev_code = CODE_EOF;
 	}
 
 	// if we didn't write anything, there shouldn't be any bits left in reservoir.
 	assert(!(state->wptr == 0 && state->bitres_len > 0));
 
 	printf("Returning %zu bytes written to caller.\n", state->wptr);
+
+	printf("DEBUG: %zu bytes written after dlen check.\n", state->wptr - old_wptr);
+	assert(state->wptr - old_wptr <= 3);
+
 	return state->wptr;
 }

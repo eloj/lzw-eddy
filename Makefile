@@ -38,5 +38,8 @@ fuzz: afl-decompress-driver
 test: lzw-eddy
 	${TEST_PREFIX} ./run-tests.sh
 
+backup:
+	tar -cJf ../eddy-lzw-`date +"%Y-%m"`.tar.xz ../lzw-eddy
+
 clean:
 	rm -f lzw-eddy afl-decompress-driver core core.*

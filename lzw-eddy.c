@@ -54,7 +54,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
-	if (slen > 0) {
+	//if (slen > 0) {
 		printf("Compressing %zu bytes.\n", slen);
 		FILE *ofile = fopen(destfile, "wb");
 		if (ofile) {
@@ -79,7 +79,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 		} else {
 			fprintf(stderr, "Error: %m\n");
 		}
-	}
+	// }
 	fclose(ifile);
 }
 
