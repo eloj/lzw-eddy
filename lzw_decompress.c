@@ -218,10 +218,13 @@ static bool lzw_string_table_lookup(struct lzwc_state *state, uint8_t *prefix, s
 
 static void lzw_output_code(struct lzwc_state *state, uint16_t code) {
 	// TODO: Write until less than one octet left, put remains in bit-reservoir.
+	assert(state->bitres_len + state->tree.code_width < sizeof(bitres_t)*8);
 	state->bitres |= code << state->bitres_len;
 	state->bitres_len += state->tree.code_width;
 
-	printf("<CODE:%d width=%d reservoir:%d/%zu:%02x>\n", code, state->tree.code_width, state->bitres_len, sizeof(bitres_t)*8, state->bitres);
+	state->tree.prev_code = code;
+
+	printf("<CODE:%d width=%d reservoir:%02d/%zu:%02x>\n", code, state->tree.code_width, state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 }
 
 static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool final) {
@@ -229,10 +232,10 @@ static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool fi
 
 	// Write codes to output.
 	while (state->bitres_len >= 8) {
-		printf("Flushing 8 bits.\n");
 		dest[state->wptr++] = state->bitres & 0xFF;
 		state->bitres >>= 8;
 		state->bitres_len -= 8;
+		printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 	}
 
 	if (final && state->bitres_len > 0) {
@@ -240,6 +243,7 @@ static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool fi
 		dest[state->wptr++] = state->bitres;
 		state->bitres = 0;
 		state->bitres_len = 0;
+		printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 	}
 }
 
@@ -255,7 +259,7 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 
 	while (state->readptr + prefix_end < slen) {
 		// Ensure we have enough space for flushing codes.
-		if (state->wptr + (state->tree.code_width >> 3) + 1 > dlen) { // TODO: Also reserve bits for EOF code.
+		if (state->wptr + (state->tree.code_width >> 3) + 1 + 2 > dlen) { // Also reserve bits for 16-bit EOF code.
 			return state->wptr;
 		}
 
@@ -273,19 +277,20 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 			state->readptr += prefix_end;
 			prefix_end = 0;
 		}
-		state->tree.prev_code = code;
-
 		lzw_output_code(state, code);
-		if (state->readptr + prefix_end == slen)
-			lzw_output_code(state, CODE_EOF);
 
 		lzw_flush_reservoir(state, dest, false);
+		break; // This tests
 	}
-
-	if (state->wptr == 0) {
-		assert(state->bitres_len < 8); // if we didn't write anything, there shouldn't be a full octet to flush.
+	// WARN: Problem with this is that we can't chain encodes, add 'final' flag to compression call?
+	if (state->readptr + prefix_end == slen && state->tree.prev_code != CODE_EOF) {
+		lzw_output_code(state, CODE_EOF);
 		lzw_flush_reservoir(state, dest, true);
 	}
+
+	// if we didn't write anything, there shouldn't be any bits left in reservoir.
+	assert(!(state->wptr == 0 && state->bitres_len > 0));
+
 	printf("Returning %zu bytes written to caller.\n", state->wptr);
 	return state->wptr;
 }

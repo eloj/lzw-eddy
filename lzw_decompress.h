@@ -59,6 +59,8 @@ struct lzwc_state {
 
 	// Tracks the longest prefix used, which is equal to the minimum output buffer required for decompression.
 	size_t longest_prefix;
+	// TODO: Restrict the longest_prefix to this -- optimize for decode buffer size.
+	size_t longest_prefix_allowed;
 };
 
 // Translate error code to message.
