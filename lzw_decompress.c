@@ -154,9 +154,9 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 				return LZWD_INVALID_CODE_STREAM;
 			}
 
-			// Track max output buffer size required. This isn't necessary, but nice to have.
-			if (prefix_len + 2 > state->longest_prefix) {
-				state->longest_prefix = prefix_len + 2;
+			// Track longest prefix seen.
+			if (prefix_len + 1 > state->longest_prefix) {
+				state->longest_prefix = prefix_len + 1;
 			}
 
 			// Check if prefix alone too large for output buffer. User could try again with a larger buffer.
@@ -208,7 +208,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 }
 
 static bool lzw_string_table_lookup(struct lzwc_state *state, uint8_t *prefix, size_t len, uint16_t *code) {
-	printf("Looking up prefix '%.*s' from %p to %p (len=%zu)\n", (int)(len), prefix, prefix, prefix+len, len);
+	// printf("Looking up prefix '%.*s' from %p to %p (len=%zu)\n", (int)(len), prefix, prefix, prefix+len, len);
 	assert (len > 0);
 
 	if (len == 1) {
@@ -247,7 +247,7 @@ static void lzw_output_code(struct lzwc_state *state, uint16_t code) {
 	state->bitres |= code << state->bitres_len;
 	state->bitres_len += state->tree.code_width;
 
-	printf("<CODE:%d width=%d reservoir:%02d/%zu:%02x>\n", code, state->tree.code_width, state->bitres_len, sizeof(bitres_t)*8, state->bitres);
+	// printf("<CODE:%d width=%d reservoir:%02d/%zu:%02x>\n", code, state->tree.code_width, state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 }
 
 static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool final) {
@@ -258,7 +258,7 @@ static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool fi
 		dest[state->wptr++] = state->bitres & 0xFF;
 		state->bitres >>= 8;
 		state->bitres_len -= 8;
-		printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
+		// printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 	}
 
 	if (final && state->bitres_len > 0) {
@@ -266,7 +266,7 @@ static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool fi
 		dest[state->wptr++] = state->bitres;
 		state->bitres = 0;
 		state->bitres_len = 0;
-		printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
+		// printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 	}
 }
 
@@ -287,7 +287,7 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 		// printf("Reading input..\n");
 
 		// Ensure we have enough space for flushing codes.
-		if (state->wptr + (state->tree.code_width >> 3) + 1 + 2 + 2 > dlen) { // Also reserve bits for 16-bit EOF code (also need RESET?)
+		if (state->wptr + (state->tree.code_width >> 3) + 1 + 2 + 2 > dlen) { // Also reserve bits for worst-case 16-bit CLEAR + EOF code
 			printf("**EARLY OUT DUE TO DEST OVERFLOW**\n");
 			return state->wptr;
 		}
@@ -295,9 +295,9 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 
 		++prefix_end;
 		// lookup prefix in string table
+		bool overlong = ((state->longest_prefix_allowed > 0) && (prefix_end >= state->longest_prefix_allowed));
 		bool existing_code = lzw_string_table_lookup(state, src + state->readptr, prefix_end, &code);
-		// if not found, add prefix rooted at state->prev_code
-		if (!existing_code) {
+		if (!existing_code || overlong) {
 			assert(code != CODE_CLEAR);
 			assert(code != CODE_EOF);
 
@@ -305,7 +305,7 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 			uint16_t parent = code;
 			uint16_t parent_len = lzw_node_prefix_len(state->tree.node[parent]);
 
-			printf("New prefix from src[%zu], adding symbol '%c' (%02x) as code %d /w parent %d\n", state->readptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
+			// printf("New prefix from src[%zu], adding symbol '%c' (%02x) as code %d /w parent %d\n", state->readptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
 			state->tree.node[state->tree.next_code] = lzw_make_node(symbol, parent, parent_len + 1);
 			if (parent_len >= state->longest_prefix) {
 				state->longest_prefix = parent_len + 1;
@@ -330,20 +330,17 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 			state->tree.prev_code = state->tree.next_code;
 			state->tree.next_code++;
 
-			state->readptr += prefix_end - 1; // a.k.a parent_len
+			state->readptr += parent_len + 1;
 			prefix_end = 0;
 
 			lzw_flush_reservoir(state, dest, false);
 		} else {
-			printf("Found as code %d\n", code);
+			// printf("Found as code %d\n", code);
 		}
-		// break; // This tests re-entrancy
-		//
-		// printf("<iteration readptr:%zu + prefix_end:%zu < %zu slen == %d>\n", state->readptr, prefix_end, slen, (state->readptr + prefix_end) < slen);
 	}
 	if (prefix_end != 0) {
 		printf("**Last prefix existed, writing existing code %d to stream**\n", code);
-		lzw_output_code(state, code); // or just 'code' I guess..
+		lzw_output_code(state, code);
 		lzw_flush_reservoir(state, dest, false);
 		state->tree.prev_code = code;
 		state->readptr += prefix_end;
@@ -366,7 +363,7 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 	printf("Returning %zu bytes written to caller.\n", state->wptr);
 
 	printf("DEBUG: %zu bytes written after dlen check.\n", state->wptr - old_wptr);
-	assert(state->wptr - old_wptr <= 1 + 2 + 2);
+	assert(state->wptr - old_wptr < 1 + 2 + 2);
 
 	return state->wptr;
 }

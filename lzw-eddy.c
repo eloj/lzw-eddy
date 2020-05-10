@@ -10,6 +10,7 @@
 static const char *infile;
 static const char *outfile;
 static int compress = 0;
+static size_t maxlen = 0;
 
 static int parse_args(int argc, char **argv) {
 	// TODO: just use getopt.h?
@@ -34,6 +35,9 @@ static int parse_args(int argc, char **argv) {
 						break;
 					case 'o':
 						outfile = value;
+						break;
+					case 'm':
+						maxlen = atoi(value);
 						break;
 				}
 			}
@@ -62,6 +66,10 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 			uint8_t dest[4096];
 
 			struct lzwc_state state = { 0 };
+			if (maxlen > 0) {
+				state.longest_prefix_allowed = maxlen;
+				printf("WARNING: Restricting maximum prefix length to %zu.\n", state.longest_prefix_allowed);
+			}
 
 			fread(src, slen, 1, ifile);
 			ssize_t res, written = 0;
