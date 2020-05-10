@@ -109,8 +109,13 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 			ofile = fopen(destfile, "wb");
 		}
 		if (ofile) {
+			size_t dest_len = 4096;
+			if (maxlen > 0) {
+				dest_len = maxlen + 1;
+				printf("WARNING: Restricting output buffer to %zu bytes.\n", dest_len);
+			}
 			uint8_t *src = malloc(slen);
-			uint8_t dest[4096];
+			uint8_t dest[dest_len];
 			fread(src, slen, 1, ifile);
 
 			struct lzwd_state state = { 0 };
