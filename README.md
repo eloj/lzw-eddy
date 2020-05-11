@@ -12,6 +12,10 @@ probably due to its use in GIF. This resulted in it being used in [all sorts of 
 This code was developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
 
+All code is provided under the [MIT License](LICENSE).
+
+[![Build Status](https://travis-ci.org/eloj/lzw-eddy.svg?branch=master)](https://travis-ci.org/eloj/lzw-eddy)
+
 ## Decompression Features
 
 * Fixed memory requirements:
@@ -45,6 +49,3 @@ by Steve Blackstock as a reference.
 	}
 ```
 
-All code is provided under the [MIT License](LICENSE).
-
-[![Build Status](https://travis-ci.org/eloj/lzw-eddy.svg?branch=master)](https://travis-ci.org/eloj/lzw-eddy)
