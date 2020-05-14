@@ -72,16 +72,16 @@ const char *lzw_strerror(enum lzw_errors errnum) {
 	const char *errstr = "Unknown error";
 
 	switch (errnum) {
-		case LZWD_NOERROR:
+		case LZW_NOERROR:
 			errstr = "No error";
 			break;
-		case LZWD_DESTINATION_TOO_SMALL:
+		case LZW_DESTINATION_TOO_SMALL:
 			errstr = "Destination buffer too small";
 			break;
-		case LZWD_INVALID_CODE_STREAM:
+		case LZW_INVALID_CODE_STREAM:
 			errstr = "Invalid code stream";
 			break;
-		case LZWD_STRING_TABLE_FULL:
+		case LZW_STRING_TABLE_FULL:
 			errstr = "String table full";
 			break;
 
@@ -121,7 +121,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 			break;
 		} else if (state->must_reset) {
 			// ERROR: Ran out of space in string table
-			return LZWD_STRING_TABLE_FULL;
+			return LZW_STRING_TABLE_FULL;
 		}
 
 		if (code <= state->tree.next_code) {
@@ -132,7 +132,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 
 			// Invalid state, invalid input.
 			if (!known_code && state->tree.prev_code == CODE_EOF) {
-				return LZWD_INVALID_CODE_STREAM;
+				return LZW_INVALID_CODE_STREAM;
 			}
 
 			// Track longest prefix seen.
@@ -142,7 +142,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 
 			// Check if prefix alone too large for output buffer. User could start over with a larger buffer.
 			if (prefix_len + 1 > dlen) {
-				return LZWD_DESTINATION_TOO_SMALL;
+				return LZW_DESTINATION_TOO_SMALL;
 			}
 
 			// Check if room in output buffer, else return early.
@@ -183,7 +183,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 			state->tree.prev_code = code;
 		} else {
 			// Desynchronized, probably corrupt/invalid input.
-			return LZWD_INVALID_CODE_STREAM;
+			return LZW_INVALID_CODE_STREAM;
 		}
 	}
 	return wptr;
