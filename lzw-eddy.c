@@ -58,36 +58,34 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
-	//if (slen > 0) {
-		printf("Compressing %zu bytes.\n", slen);
-		FILE *ofile = fopen(destfile, "wb");
-		if (ofile) {
-			uint8_t *src = malloc(slen);
-			uint8_t dest[4096];
+	printf("Compressing %zu bytes.\n", slen);
+	FILE *ofile = fopen(destfile, "wb");
+	if (ofile) {
+		uint8_t *src = malloc(slen);
+		uint8_t dest[4096];
 
-			struct lzw_state state = { 0 };
-			if (maxlen > 0) {
-				state.longest_prefix_allowed = maxlen;
-				printf("WARNING: Restricting maximum prefix length to %zu.\n", state.longest_prefix_allowed);
-			}
-
-			fread(src, slen, 1, ifile);
-			ssize_t res, written = 0;
-			while ((res = lzw_compress(&state, src, slen, dest, sizeof(dest))) > 0) {
-				fwrite(dest, res, 1, ofile);
-				written += res;
-			}
-			if (res == 0) {
-				printf("%zd bytes written to output (longest prefix=%zu).\n", written, state.longest_prefix);
-			} else if (res < 0) {
-				fprintf(stderr, "Compression returned error: %s (err: %zd)\n", lzw_strerror(res), res);
-			}
-			fclose(ofile);
-			free(src);
-		} else {
-			fprintf(stderr, "Error: %m\n");
+		struct lzw_state state = { 0 };
+		if (maxlen > 0) {
+			state.longest_prefix_allowed = maxlen;
+			printf("WARNING: Restricting maximum prefix length to %zu.\n", state.longest_prefix_allowed);
 		}
-	// }
+
+		fread(src, slen, 1, ifile);
+		ssize_t res, written = 0;
+		while ((res = lzw_compress(&state, src, slen, dest, sizeof(dest))) > 0) {
+			fwrite(dest, res, 1, ofile);
+			written += res;
+		}
+		if (res == 0) {
+			printf("%zd bytes written to output (longest prefix=%zu).\n", written, state.longest_prefix);
+		} else if (res < 0) {
+			fprintf(stderr, "Compression returned error: %s (err: %zd)\n", lzw_strerror(res), res);
+		}
+		fclose(ofile);
+		free(src);
+	} else {
+		fprintf(stderr, "Error: %m\n");
+	}
 	fclose(ifile);
 }
 
