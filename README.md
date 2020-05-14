@@ -30,7 +30,7 @@ All code is provided under the [MIT License](LICENSE).
 ```c
 	#include "lzw_decompress.c"
 
-	struct lzwd_state state = { 0 };
+	struct lzw_state state = { 0 };
 
 	size_t slen = <length of compressed data>
 	uint8_t *src = <compressed data>;
@@ -45,6 +45,6 @@ All code is provided under the [MIT License](LICENSE).
 	if (res == 0) {
 		printf("%zd bytes successfully decompressed.\n", written);
 	} else if (res < 0) {
-		fprintf(stderr, "Decompression error: %s (err:%zd)\n", lzwd_strerror(res), res);
+		fprintf(stderr, "Decompression error: %s (err:%zd)\n", lzw_strerror(res), res);
 	}
 ```
