@@ -36,7 +36,7 @@ All code is provided under the [MIT License](LICENSE).
 ```c
 	#include "lzw.c"
 
-	struct lzw_state state = { 0 };
+	struct lzw_state state = { };
 
 	size_t slen = <length of compressed data>
 	uint8_t *src = <compressed data>;
