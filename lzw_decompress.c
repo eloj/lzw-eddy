@@ -220,8 +220,6 @@ static bool lzw_string_table_lookup(struct lzwc_state *state, uint8_t *prefix, s
 	for (size_t i=state->tree.next_code - 1 ; i >= CODE_FIRST ; --i) {
 		lzw_node node = state->tree.node[i];
 
-		//printf("Looking at node %zu in search...", i);
-
 		if (len - 1 == lzw_node_prefix_len(node)) {
 			for (size_t j=0 ; j < len ; ++j) {
 				if (prefix[len-j-1] != lzw_node_symbol(node)) {
@@ -234,9 +232,6 @@ static bool lzw_string_table_lookup(struct lzwc_state *state, uint8_t *prefix, s
 				}
 				node = state->tree.node[lzw_node_parent(node)];
 			}
-			//printf("NO match.\n");
-		} else {
-			//printf("NO match (len)\n");
 		}
 	}
 
@@ -259,11 +254,11 @@ static void lzw_flush_reservoir(struct lzwc_state *state, uint8_t *dest, bool fi
 		dest[state->wptr++] = state->bitres & 0xFF;
 		state->bitres >>= 8;
 		state->bitres_len -= 8;
-		// printf("Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
+		// printf("DEBUG: Flushed: %02x, reservoir:%02d/%zu:%02x\n", dest[state->wptr-1], state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 	}
 
 	if (final && state->bitres_len > 0) {
-		printf("DEBUG: Flushing last %d bits.\n", state->bitres_len);
+		// printf("DEBUG: Flushing last %d bits.\n", state->bitres_len);
 		dest[state->wptr++] = state->bitres;
 		state->bitres = 0;
 		state->bitres_len = 0;
@@ -286,7 +281,6 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 	while (state->readptr + prefix_end < slen) {
 		// Ensure we have enough space for flushing codes.
 		if (state->wptr + (state->tree.code_width >> 3) + 1 + 2 + 2 > dlen) { // Also reserve bits for worst-case 16-bit CLEAR + EOF code
-			printf("**EARLY OUT DUE TO DEST OVERFLOW**\n");
 			return state->wptr;
 		}
 		old_wptr = state->wptr;
@@ -314,9 +308,9 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 
 			// Handle code width expansion.
 			if (state->tree.next_code > mask_from_width(state->tree.code_width)) {
-				printf("DEBUG: Expanding bitwidth to %d\n", state->tree.code_width + 1);
+				// printf("DEBUG: Expanding bitwidth to %d\n", state->tree.code_width + 1);
 				if (state->tree.code_width >= LZW_MAX_CODE_WIDTH) {
-					printf("DEBUG: Max code-width reached -- Issuing clear/reset\n");
+					// printf("DEBUG: Max code-width reached -- Issuing clear/reset\n");
 					lzw_output_code(state, CODE_CLEAR);
 					lzw_string_table_reset(&state->tree);
 					lzw_flush_reservoir(state, dest, false);
@@ -335,7 +329,7 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 		}
 	}
 	if (prefix_end != 0) {
-		printf("DEBUG: Last prefix existed, writing existing code %d to stream\n", code);
+		// printf("DEBUG: Last prefix existed, writing existing code %d to stream\n", code);
 		lzw_output_code(state, code);
 		lzw_flush_reservoir(state, dest, false);
 		state->tree.prev_code = code;
@@ -355,10 +349,10 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 
 	// if we didn't write anything, there shouldn't be any bits left in reservoir.
 	assert(!(state->wptr == 0 && state->bitres_len > 0));
-	printf("DEBUG: %zu bytes written after dlen check.\n", state->wptr - old_wptr);
+	// printf("DEBUG: %zu bytes written after dlen check.\n", state->wptr - old_wptr);
 	assert(state->wptr - old_wptr < 1 + 2 + 2);
 
-	printf("DEBUG: Returning %zu bytes written to caller.\n", state->wptr);
+	// printf("DEBUG: Returning %zu bytes written to caller.\n", state->wptr);
 
 	return state->wptr;
 }
