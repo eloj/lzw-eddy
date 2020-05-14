@@ -62,16 +62,21 @@ const char *lzw_strerror(enum lzw_errors errnum);
 	`dlen` should be at least 4096 bytes, unless the input is known to
 	require less.
 
-	-1 will be returned if the output buffer is too small, in which case
+	`LZWD_DESTINATION_TOO_SMALL` will be returned if the output buffer is too small, in which case
 	you'd have to restart from the beginning with a larger `dest`.
 
 	All that said, even a file consisting of 80K zeros requires only 400 bytes,
-	so we're being very conservative here. A 'normal' file may need only
-	128 bytes or so.
+	so we're being very conservative here. A 'normal' file may need only 128 bytes or so.
 */
 ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
 
 /*
+	Compress `slen` bytes from `src` into `dest` of size `dlen`.
+
+	Returns the number of bytes compressed into `dest`.
+	Once all input has been consumed, 0 is returned.
+	On error, a negative integer is returned.
+
+	`state`should be zero-initialized.
 */
 ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
-

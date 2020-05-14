@@ -330,7 +330,6 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 
 	// if we didn't write anything, there shouldn't be any bits left in reservoir.
 	assert(!(state->wptr == 0 && state->bitres_len > 0));
-	// printf("DEBUG: %zu bytes written after dlen check.\n", state->wptr - old_wptr);
 	assert(state->wptr - old_wptr < 1 + 2 + 2);
 
 	// printf("DEBUG: Returning %zu bytes written to caller.\n", state->wptr);
