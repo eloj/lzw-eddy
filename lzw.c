@@ -199,6 +199,9 @@ static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, si
 		return true;
 	}
 
+	// PERF: This is slow, we should store an array of hashes to use as an initial comparison before walking the tree.
+	// NOTE: It's imperative that we search newest to oldest. When limiting the prefix length, we'll
+	// end up with duplicate prefixes, and only the newest code is valid for the decoder to stay in sync.
 	for (size_t i=state->tree.next_code - 1 ; i >= CODE_FIRST ; --i) {
 		lzw_node node = state->tree.node[i];
 
@@ -220,7 +223,7 @@ static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, si
 	return false;
 }
 
-static void lzw_output_code(struct lzw_state *state, uint16_t code) {
+inline static void lzw_output_code(struct lzw_state *state, uint16_t code) {
 	assert(state->bitres_len + state->tree.code_width < sizeof(bitres_t)*8);
 	state->bitres |= code << state->bitres_len;
 	state->bitres_len += state->tree.code_width;
