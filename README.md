@@ -1,7 +1,7 @@
 
-# Simple LZW (Lempel-Ziv-Welch) Decompressor
+# Simple LZW (Lempel-Ziv-Welch) Compressor & Decompressor
 
-A basic headerless LZW decompressor. Supports variable length codes between
+A basic headerless LZW compressor and decompressor. Supports variable length codes between
 9 and 12 bits per default. Up to 16-bits should work if the `LZW_MAX_CODE_WIDTH`
 define is changed and the `lzw_node` type upgraded to 64 bits, but this is untested.
 
@@ -48,4 +48,3 @@ All code is provided under the [MIT License](LICENSE).
 		fprintf(stderr, "Decompression error: %s (err:%zd)\n", lzwd_strerror(res), res);
 	}
 ```
-
