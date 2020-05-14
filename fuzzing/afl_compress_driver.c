@@ -1,5 +1,5 @@
 /*
-	Decompression console driver for use with afl-fuzz.
+	Compression console driver for use with afl-fuzz.
 */
 #include <unistd.h>
 #include <stdio.h>
@@ -9,7 +9,7 @@
 int main(int argc, char *argv[]) {
 	struct lzw_state state = { 0 };
 	uint8_t dest[2048];
-	unsigned char buf[1024];
+	unsigned char buf[4096];
 
 #ifdef __clang_major__
 	while (__AFL_LOOP(1000)) {
