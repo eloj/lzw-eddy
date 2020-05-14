@@ -26,7 +26,7 @@
 #define CODE_EOF (CODE_CLEAR+1)
 #define CODE_FIRST (CODE_CLEAR+2)
 
-static_assert((LZW_MAX_CODE_WIDTH >= LZW_MIN_CODE_WIDTH));
+static_assert((LZW_MAX_CODE_WIDTH >= LZW_MIN_CODE_WIDTH), "");
 static_assert((SYMBOL_BITS + PARENT_BITS + PREFIXLEN_BITS) <= sizeof(lzw_node)*8, "lzw_node type too small");
 static_assert((LZW_MAX_CODE_WIDTH*2 - 1) < sizeof(bitres_t)*8, "bitres_t type too small");
 
@@ -258,7 +258,7 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 	size_t prefix_end = 0;
 	state->wptr = 0;
 
-	size_t old_wptr = 0; // DEBUG AID.
+	size_t old_wptr __attribute__((unused)) = 0; // DEBUG AID.
 
 	while (state->rptr + prefix_end < slen) {
 		// Ensure we have enough space for flushing codes.
