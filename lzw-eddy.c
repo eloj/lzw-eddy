@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "lzw_decompress.c"
+#include "lzw.c"
 
 static const char *infile;
 static const char *outfile;

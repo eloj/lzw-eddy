@@ -28,7 +28,7 @@ All code is provided under the [MIT License](LICENSE).
 ## Usage Example
 
 ```c
-	#include "lzw_decompress.c"
+	#include "lzw.c"
 
 	struct lzw_state state = { 0 };
 

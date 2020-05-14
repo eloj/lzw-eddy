@@ -26,13 +26,13 @@ CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(MISCFLAGS)
 
 all: lzw-eddy
 
-lzw-eddy: lzw-eddy.c lzw_decompress.c lzw_decompress.h
+lzw-eddy: lzw-eddy.c lzw.c lzw.h
 	$(CC) $(CFLAGS) $< -o $@
 
-afl-decompress-driver: fuzzing/afl_decompress_driver.c lzw_decompress.c lzw_decompress.h
+afl-decompress-driver: fuzzing/afl_decompress_driver.c lzw.c lzw.h
 	afl-gcc $(CFLAGS) fuzzing/afl_decompress_driver.c -o $@
 
-afl-compress-driver: fuzzing/afl_compress_driver.c lzw_decompress.c lzw_decompress.h
+afl-compress-driver: fuzzing/afl_compress_driver.c lzw.c lzw.h
 	afl-gcc $(CFLAGS) fuzzing/afl_compress_driver.c -o $@
 
 fuzz-decomp: afl-decompress-driver

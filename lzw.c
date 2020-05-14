@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "lzw_decompress.h"
+#include "lzw.h"
 
 #define SYMBOL_BITS 8
 #define SYMBOL_SHIFT 0
@@ -26,6 +26,7 @@
 #define CODE_EOF (CODE_CLEAR+1)
 #define CODE_FIRST (CODE_CLEAR+2)
 
+static_assert((LZW_MAX_CODE_WIDTH >= LZW_MIN_CODE_WIDTH));
 static_assert((SYMBOL_BITS + PARENT_BITS + PREFIXLEN_BITS) <= sizeof(lzw_node)*8, "lzw_node type too small");
 static_assert((LZW_MAX_CODE_WIDTH*2 - 1) < sizeof(bitres_t)*8, "bitres_t type too small");
 

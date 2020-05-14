@@ -4,10 +4,10 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "../lzw_decompress.c"
+#include "../lzw.c"
 
 int main(int argc, char *argv[]) {
-	struct lzwd_state state = { 0 };
+	struct lzw_state state = { 0 };
 	uint8_t dest[2048];
 	unsigned char buf[1024];
 
