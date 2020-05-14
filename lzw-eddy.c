@@ -65,7 +65,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 			uint8_t *src = malloc(slen);
 			uint8_t dest[4096];
 
-			struct lzwc_state state = { 0 };
+			struct lzw_state state = { 0 };
 			if (maxlen > 0) {
 				state.longest_prefix_allowed = maxlen;
 				printf("WARNING: Restricting maximum prefix length to %zu.\n", state.longest_prefix_allowed);
@@ -118,7 +118,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 			uint8_t dest[dest_len];
 			fread(src, slen, 1, ifile);
 
-			struct lzwd_state state = { 0 };
+			struct lzw_state state = { 0 };
 
 			ssize_t res, written = 0;
 			// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.

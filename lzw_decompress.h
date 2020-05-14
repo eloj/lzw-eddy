@@ -29,29 +29,13 @@ struct lzw_string_table {
 	lzw_node node[LZW_MAX_CODE]; // 16K at 12-bit codes.
 };
 
-struct lzwd_state {
+struct lzw_state {
 	struct lzw_string_table tree;
 
 	bool	 was_init;
 	bool	 must_reset;
 
-	size_t readptr;
-	// Bit reservoir, need room for LZW_MAX_CODE_WIDTH*2-1 bits.
-	bitres_t bitres;
-	uint32_t bitres_len;
-
-	// Tracks the longest prefix used, which is equal to the minimum output buffer required for decompression.
-	size_t longest_prefix;
-};
-
-// TODO: merge with lzwd state, or use a shared struct for string table?
-struct lzwc_state {
-	struct lzw_string_table tree;
-
-	bool	 was_init;
-	bool	 must_reset;
-
-	size_t readptr;
+	size_t rptr;
 	size_t wptr;
 	// Bit reservoir, need room for LZW_MAX_CODE_WIDTH*2-1 bits.
 	bitres_t bitres;
@@ -85,9 +69,9 @@ const char *lzw_strerror(enum lzw_errors errnum);
 	so we're being very conservative here. A 'normal' file may need only
 	128 bytes or so.
 */
-ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
+ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
 
 /*
 */
-ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
+ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen);
 
