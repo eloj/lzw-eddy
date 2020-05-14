@@ -146,7 +146,7 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 		if (code <= state->tree.next_code) {
 			bool known_code = code < state->tree.next_code;
 			uint16_t tcode = known_code ? code : state->tree.prev_code;
-			size_t prefix_len = lzw_node_prefix_len(state->tree.node[tcode]);
+			size_t prefix_len = 1 + lzw_node_prefix_len(state->tree.node[tcode]);
 			uint8_t symbol;
 
 			// Invalid state, invalid input.
@@ -155,34 +155,34 @@ ssize_t lzw_decompress(struct lzwd_state *state, uint8_t *src, size_t slen, uint
 			}
 
 			// Track longest prefix seen.
-			if (prefix_len + 1 > state->longest_prefix) {
-				state->longest_prefix = prefix_len + 1;
+			if (prefix_len > state->longest_prefix) {
+				state->longest_prefix = prefix_len;
 			}
 
 			// Check if prefix alone too large for output buffer. User could start over with a larger buffer.
-			if (prefix_len + 2 > dlen) {
+			if (prefix_len + 1 > dlen) {
 				return LZWD_DESTINATION_TOO_SMALL;
 			}
 
 			// Check if room in output buffer, else return early.
-			if (wptr + prefix_len + 2 > dlen) {
+			if (wptr + prefix_len + 1 > dlen) {
 				return wptr;
 			}
 
 			// Write out prefix to destination
-			for (size_t i=0 ; i < prefix_len + 1 ; ++i) {
+			for (size_t i=0 ; i < prefix_len ; ++i) {
 				symbol = lzw_node_symbol(state->tree.node[tcode]);
-				dest[wptr + prefix_len - i] = symbol;
+				dest[wptr + prefix_len - 1 - i] = symbol;
 				tcode = lzw_node_parent(state->tree.node[tcode]);
 			}
-			wptr += prefix_len + 1;
+			wptr += prefix_len;
 
 			// Add the first character of the prefix as a new code with prev_code as the parent.
 			if (state->tree.prev_code != CODE_EOF) {
 				if (!known_code) {
+					assert(code == state->tree.next_code);
 					assert(wptr < dlen);
 					dest[wptr++] = symbol; // Special case for new codes. Why we check len+2 above.
-					assert(code == state->tree.next_code);
 				}
 
 				state->tree.node[state->tree.next_code] = lzw_make_node(symbol, state->tree.prev_code, 1 + lzw_node_prefix_len(state->tree.node[state->tree.prev_code]));
@@ -295,12 +295,12 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 
 			uint8_t symbol = src[state->readptr + prefix_end - 1];
 			uint16_t parent = code;
-			uint16_t parent_len = lzw_node_prefix_len(state->tree.node[parent]);
+			uint16_t parent_len = 1 + lzw_node_prefix_len(state->tree.node[parent]);
 
 			// printf("New prefix from src[%zu], adding symbol '%c' (%02x) as code %d /w parent %d\n", state->readptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
-			state->tree.node[state->tree.next_code] = lzw_make_node(symbol, parent, parent_len + 1);
+			state->tree.node[state->tree.next_code] = lzw_make_node(symbol, parent, parent_len);
 			if (parent_len >= state->longest_prefix) {
-				state->longest_prefix = parent_len + 1;
+				state->longest_prefix = parent_len;
 			}
 
 			// Output code _before_ we potentially change the bit-width.
@@ -322,7 +322,7 @@ ssize_t lzw_compress(struct lzwc_state *state, uint8_t *src, size_t slen, uint8_
 			state->tree.prev_code = state->tree.next_code;
 			state->tree.next_code++;
 
-			state->readptr += parent_len + 1;
+			state->readptr += parent_len;
 			prefix_end = 0;
 
 			lzw_flush_reservoir(state, dest, false);
