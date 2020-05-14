@@ -16,14 +16,20 @@ All code is provided under the [MIT License](LICENSE).
 
 [![Build Status](https://travis-ci.org/eloj/lzw-eddy.svg?branch=master)](https://travis-ci.org/eloj/lzw-eddy)
 
-## Decompression Features
+## Features
 
 * Fixed memory requirements:
 	* Uses ~16KiB for state/string table.
 	* ~4KiB destination buffer recommended, but can go much lower in practice.
 	* Low stack usage.
-* No wasteful scratch buffer used when writing out strings.
+* Compressor can be 'short-stroked' to limit decompression buffer size requirement.
+* No scratch buffer used when decompressing.
 * [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean.
+
+## TODO
+
+* Use hashing for lookups in `lzw_string_table_lookup`.
+* Gather/Scatter option for compress/decompress source.
 
 ## Usage Example
 
@@ -38,8 +44,8 @@ All code is provided under the [MIT License](LICENSE).
 
 	ssize_t res, written = 0;
 	while ((res = lzw_decompress(&state, src, slen, dest, sizeof(dest))) > 0) {
-		// Process `res` bytes of output in `dest`.
-		fwrite(dest, res, 1, outfile);
+		// Process `res` bytes of output in `dest`, e.g:
+		// fwrite(dest, res, 1, outfile);
 		written += res;
 	}
 	if (res == 0) {
