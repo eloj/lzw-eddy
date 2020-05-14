@@ -26,17 +26,26 @@ CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(MISCFLAGS)
 
 all: lzw-eddy
 
-lzw-eddy: lzw-eddy.c lzw_decompress.c lzw_decompress.h
+lzw-eddy: lzw-eddy.c lzw.c lzw.h
 	$(CC) $(CFLAGS) $< -o $@
 
-afl-decompress-driver: fuzzing/afl_decompress_driver.c lzw_decompress.c lzw_decompress.h
+afl-decompress-driver: fuzzing/afl_decompress_driver.c lzw.c lzw.h
 	afl-gcc $(CFLAGS) fuzzing/afl_decompress_driver.c -o $@
 
-fuzz: afl-decompress-driver
+afl-compress-driver: fuzzing/afl_compress_driver.c lzw.c lzw.h
+	afl-gcc $(CFLAGS) fuzzing/afl_compress_driver.c -o $@
+
+fuzz-decomp: afl-decompress-driver
 	AFL_SKIP_CPUFREQ=1 afl-fuzz -i tests -o findings -- ./afl-decompress-driver
+
+fuzz-comp: afl-compress-driver
+	AFL_SKIP_CPUFREQ=1 afl-fuzz -i tests -o findings -- ./afl-compress-driver
 
 test: lzw-eddy
 	${TEST_PREFIX} ./run-tests.sh
 
+backup:
+	tar -cJf ../eddy-lzw-`date +"%Y-%m"`.tar.xz ../lzw-eddy
+
 clean:
-	rm -f lzw-eddy afl-decompress-driver core core.*
+	rm -f lzw-eddy afl-*-driver core core.*

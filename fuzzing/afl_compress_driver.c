@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
 		ssize_t slen = read(0, buf, sizeof(buf));
 
 		ssize_t res, written = 0;
-		while ((res = lzw_decompress(&state, buf, slen, dest, sizeof(dest))) > 0) {
+		while ((res = lzw_compress(&state, buf, slen, dest, sizeof(dest))) > 0) {
 			written += res;
 		}
-		printf("decompressed:%zd (res=%zd)\n", written, res);
+		printf("compressed:%zd (res=%zd)\n", written, res);
 #ifdef __clang_major__
 	}
 #endif
