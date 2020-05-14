@@ -94,6 +94,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 	if (state->was_init == false)
 		lzw_init(state);
 
+	// Keep local copies so that we can exit and continue without losing bits.
 	uint32_t bitres = state->bitres;
 	uint32_t bitres_len = state->bitres_len;
 
@@ -102,13 +103,17 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 
 	while (state->rptr < slen) {
 		// Fill bit-reservoir.
-		while (bitres_len < state->tree.code_width) {
+		while ((bitres_len < state->tree.code_width) && (state->rptr < slen)) {
 			bitres |= src[state->rptr++] << bitres_len;
 			bitres_len += 8;
 		}
 
 		state->bitres = bitres;
 		state->bitres_len = bitres_len;
+
+		if (state->bitres_len < state->tree.code_width) {
+			return LZW_INVALID_CODE_STREAM;
+		}
 
 		code = bitres & mask_from_width(state->tree.code_width);
 		bitres >>= state->tree.code_width;
@@ -232,7 +237,7 @@ inline static void lzw_output_code(struct lzw_state *state, uint16_t code) {
 }
 
 static void lzw_flush_reservoir(struct lzw_state *state, uint8_t *dest, bool final) {
-	// NOTE: We assume we have enough space left in dest.
+	// SECURITY: We assume we have enough space left in dest!
 
 	// Write codes to output.
 	while (state->bitres_len >= 8) {
