@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <err.h>
 
 #include "lzw.c"
 
@@ -70,7 +71,10 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 			printf("WARNING: Restricting maximum prefix length to %zu.\n", state.longest_prefix_allowed);
 		}
 
-		fread(src, slen, 1, ifile);
+		if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
+			err(1, "fread: %s", srcfile);
+		}
+
 		ssize_t res, written = 0;
 		while ((res = lzw_compress(&state, src, slen, dest, sizeof(dest))) > 0) {
 			fwrite(dest, res, 1, ofile);
@@ -114,7 +118,9 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 			}
 			uint8_t *src = malloc(slen);
 			uint8_t dest[dest_len];
-			fread(src, slen, 1, ifile);
+			if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
+				err(1, "fread: %s", srcfile);
+			}
 
 			struct lzw_state state = { 0 };
 
