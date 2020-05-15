@@ -26,10 +26,12 @@ All code is provided under the [MIT License](LICENSE).
 * No scratch buffer used when decompressing.
 * [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean (at least one cycle)
 
-## TODO
+## To Do
 
+* Add Google Benchmark.
 * Use hashing for lookups in `lzw_string_table_lookup`.
-* Gather/Scatter option for compress/decompress source.
+* Support changing inputs during processing.
+* Gather/Scatter alternative interface.
 
 ## Usage Example
 

@@ -1,5 +1,5 @@
 /*
-	Variable-length code LZW decompressor for fixed-memory decoding.
+	Variable-length code LZW compressor and decompressor for fixed-memory decoding.
 	(C)2020 Eddy L O Jansson. Licensed under The MIT License.
 
 	See https://github.com/eloj/lzw-eddy

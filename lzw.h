@@ -1,5 +1,5 @@
 /*
-	Variable-length code LZW decompressor for fixed-memory decoding.
+	Variable-length code LZW compressor and decompressor for fixed-memory decoding.
 	(C)2020 Eddy L O Jansson. Licensed under The MIT License.
 
 	See https://github.com/eloj/lzw-eddy
@@ -43,7 +43,7 @@ struct lzw_state {
 
 	// Tracks the longest prefix used, which is equal to the minimum output buffer required for decompression.
 	size_t longest_prefix;
-	// TODO: Restrict the longest_prefix to this -- optimize for decode buffer size.
+	// Restrict the longest_prefix to this -- optimize for decode buffer size.
 	size_t longest_prefix_allowed;
 };
 
