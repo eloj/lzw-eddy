@@ -147,12 +147,12 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 			}
 
 			// Check if prefix alone too large for output buffer. User could start over with a larger buffer.
-			if (prefix_len + 1 > dlen) {
+			if (prefix_len + (known_code ? 0 : 1) > dlen) {
 				return LZW_DESTINATION_TOO_SMALL;
 			}
 
 			// Check if room in output buffer, else return early.
-			if (wptr + prefix_len + 1 > dlen) {
+			if (wptr + prefix_len + (known_code ? 0 : 1) > dlen) {
 				return wptr;
 			}
 
@@ -169,7 +169,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 				if (!known_code) {
 					assert(code == state->tree.next_code);
 					assert(wptr < dlen);
-					dest[wptr++] = symbol; // Special case for new codes. Why we check len+2 above.
+					dest[wptr++] = symbol; // Special case for new codes.
 				}
 
 				state->tree.node[state->tree.next_code] = lzw_make_node(symbol, state->tree.prev_code, 1 + lzw_node_prefix_len(state->tree.node[state->tree.prev_code]));
