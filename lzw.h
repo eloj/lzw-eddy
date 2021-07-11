@@ -6,6 +6,8 @@
 */
 #pragma once
 
+#include <sys/types.h> // for ssize_t
+
 // Going outside of 9- to 12-bit codes is untested, and beyond 16-bit codes will require code changes.
 #define LZW_MIN_CODE_WIDTH 9
 #define LZW_MAX_CODE_WIDTH 12
