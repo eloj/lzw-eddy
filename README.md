@@ -14,7 +14,7 @@ by Steve Blackstock as a reference.
 
 All code is provided under the [MIT License](LICENSE).
 
-[![Build Status](https://travis-ci.org/eloj/lzw-eddy.svg?branch=master)](https://travis-ci.org/eloj/lzw-eddy)
+[![Build status](https://github.com/eloj/lzw-eddy/workflows/build/badge.svg)](https://github.com/eloj/lzw-eddy/actions/workflows/c-cpp.yml)
 
 ## Features
 
