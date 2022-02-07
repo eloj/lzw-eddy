@@ -2,11 +2,13 @@
 # LZW Fuzzing Drivers
 
 This directory contains short driver programs optimized for running the
-lzw compression and decompression code through a fuzzer, specifically [AFL - American Fuzzy Loop](https://lcamtuf.coredump.cx/afl/).
+lzw compression and decompression code through a fuzzer, specifically [AFL - American Fuzzy Lop](https://lcamtuf.coredump.cx/afl/).
 
 ## Prerequisites
 
-You need to install AFL, specifically you need `afl-gcc`.
+You need to install AFL, or one of its forks.
+
+The original AFL hasn't seen updates in a long time, but [AFL++](https://aflplus.plus/) should also work, but is untested at this time.
 
 ## Running
 
