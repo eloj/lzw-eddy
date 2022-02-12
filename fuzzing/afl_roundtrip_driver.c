@@ -8,7 +8,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include "lzw.c"
+#define LZW_EDDY_IMPLEMENTATION
+#include "lzw.h"
 
 int main(int argc, char *argv[]) {
 	uint8_t buf[4096];

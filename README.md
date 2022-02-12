@@ -18,6 +18,7 @@ All code is provided under the [MIT License](LICENSE).
 
 ## Features
 
+* Single-Header Library.
 * Fixed memory requirements:
 	* Uses ~16KiB for state/string table.
 	* ~4KiB destination buffer recommended, but can go much lower in practice.
@@ -36,7 +37,8 @@ All code is provided under the [MIT License](LICENSE).
 ## Usage Example
 
 ```c
-	#include "lzw.c"
+	#define LZW_EDDY_IMPLEMENTATION
+	#include "lzw.h"
 
 	struct lzw_state state = { };
 

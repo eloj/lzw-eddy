@@ -26,10 +26,10 @@ CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(MISCFLAGS)
 
 all: lzw-eddy
 
-lzw-eddy: lzw-eddy.c lzw.c lzw.h
+lzw-eddy: lzw-eddy.c lzw.h
 	$(CC) $(CFLAGS) $< -o $@
 
-afl-%: fuzzing/afl_*.c lzw.c lzw.h
+afl-%: fuzzing/afl_*.c lzw.h
 	afl-gcc $(CFLAGS) -I. fuzzing/afl_$(subst -,_,$*).c -o $@
 
 fuzz-%:

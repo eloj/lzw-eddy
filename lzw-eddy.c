@@ -1,3 +1,6 @@
+#define LZW_EDDY_IMPLEMENTATION
+#include "lzw.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,8 +8,6 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <err.h>
-
-#include "lzw.c"
 
 static const char *infile;
 static const char *outfile;
