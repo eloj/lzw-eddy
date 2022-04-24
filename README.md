@@ -40,7 +40,7 @@ All code is provided under the [MIT License](LICENSE).
 	#define LZW_EDDY_IMPLEMENTATION
 	#include "lzw.h"
 
-	struct lzw_state state = { };
+	struct lzw_state state = { 0 };
 
 	size_t slen = <length of compressed data>
 	uint8_t *src = <compressed data>;

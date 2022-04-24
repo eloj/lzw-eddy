@@ -177,7 +177,7 @@ const char *lzw_strerror(enum lzw_errors errnum) {
 
 	}
 	return errstr;
-};
+}
 
 ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t *dest, size_t dlen) {
 	if (state->was_init == false)
