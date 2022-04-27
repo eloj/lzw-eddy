@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
-#include <err.h>
+#include <errno.h>
 
 static const char *infile;
 static const char *outfile;
@@ -60,7 +60,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
-	printf("Compressing %zu bytes.\n", slen);
+	printf("Compressing %zu bytes.\n", (size_t)slen);
 	FILE *ofile = fopen(destfile, "wb");
 	if (ofile) {
 		uint8_t *src = malloc(slen);
@@ -73,7 +73,8 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 		}
 
 		if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
-			err(1, "fread: %s", srcfile);
+			fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
+			exit(EXIT_FAILURE);
 		}
 
 		ssize_t res, written = 0;
@@ -106,7 +107,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 	fseek(ifile, 0, SEEK_SET);
 
 	if (slen > 0) {
-		printf("Decompressing %zu bytes.\n", slen);
+		printf("Decompressing %zu bytes.\n", (size_t)slen);
 		FILE *ofile = stdout;
 		if (strcmp(destfile, "-") != 0) {
 			ofile = fopen(destfile, "wb");
@@ -120,7 +121,8 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 			uint8_t *src = malloc(slen);
 			uint8_t dest[dest_len];
 			if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
-				err(1, "fread: %s", srcfile);
+				fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
+				exit(EXIT_FAILURE);
 			}
 
 			struct lzw_state state = { 0 };
