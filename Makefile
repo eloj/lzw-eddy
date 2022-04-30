@@ -4,8 +4,10 @@ OPT=-O3 -fomit-frame-pointer -funroll-loops -fstrict-aliasing -march=$(ARCH) -mt
 LTOFLAGS=-flto -fno-fat-lto-objects -fuse-linker-plugin
 WARNFLAGS=-Wall -Wextra -Wshadow -Wstrict-aliasing -Wcast-qual -Wcast-align -Wpointer-arith -Wredundant-decls -Wfloat-equal -Wswitch-enum
 CWARNFLAGS=-Wstrict-prototypes -Wmissing-prototypes
-MISCFLAGS=-fstack-protector -fvisibility=hidden
-DEVFLAGS=-Wno-unused-parameter -Wno-unused-variable
+MISCFLAGS=-fstack-protector -fcf-protection -fvisibility=hidden
+DEVFLAGS=-ggdb -DDEBUG -Wno-unused-parameter -Wno-unused-variable
+
+AFLCC?=afl-clang-fast
 
 YELLOW='\033[1;33m'
 NC='\033[0m'
@@ -18,10 +20,10 @@ ifdef PERF
 	TEST_PREFIX:=perf stat
 endif
 
-ifndef OPTIMIZED
-	MISCFLAGS+=-g -DDEBUG $(DEVFLAGS)
+ifdef OPTIMIZED
+	MISCFLAGS+=-DNDEBUG -Werror
 else
-	MISCFLAGS+=-DNDEBUG
+	MISCFLAGS+=$(DEVFLAGS)
 endif
 
 CFLAGS=-std=c11 $(OPT) $(CWARNFLAGS) $(WARNFLAGS) $(MISCFLAGS)
@@ -35,11 +37,11 @@ lzw-eddy: lzw-eddy.c lzw.h
 	$(CC) $(CFLAGS) $< -o $@
 
 afl-%: fuzzing/afl_*.c lzw.h
-	afl-gcc $(CFLAGS) -I. fuzzing/afl_$(subst -,_,$*).c -o $@
+	$(AFLCC) $(CFLAGS) -I. fuzzing/afl_$(subst -,_,$*).c -o $@
 
 fuzz-%:
 	make afl-$*
-	AFL_SKIP_CPUFREQ=1 afl-fuzz -i tests -o findings -- ./afl-$*
+	AFL_AUTORESUME=1 AFL_SKIP_CPUFREQ=1 afl-fuzz -m 16 -i tests -o findings -- ./afl-$*
 
 fuzz: fuzz-roundtrip-driver
 
