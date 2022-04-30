@@ -227,7 +227,9 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 			bool known_code = code < state->tree.next_code;
 			uint16_t tcode = known_code ? code : state->tree.prev_code;
 			size_t prefix_len = 1 + lzw_node_prefix_len(state->tree.node[tcode]);
-			uint8_t symbol;
+			uint8_t symbol = 0;
+
+			assert(prefix_len > 0);
 
 			// Invalid state, invalid input.
 			if (!known_code && state->tree.prev_code == CODE_EOF) {
