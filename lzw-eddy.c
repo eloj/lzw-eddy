@@ -64,6 +64,10 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	FILE *ofile = fopen(destfile, "wb");
 	if (ofile) {
 		uint8_t *src = malloc(slen);
+		if (!src) {
+			fprintf(stderr, "ERROR: memory allocation of %zu bytes failed.\n", slen);
+			exit(1);
+		}
 		uint8_t dest[4096];
 
 		struct lzw_state state = { 0 };
@@ -119,6 +123,11 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				printf("WARNING: Restricting output buffer to %zu bytes.\n", dest_len);
 			}
 			uint8_t *src = malloc(slen);
+			if (!src) {
+				fprintf(stderr, "ERROR: memory allocation of %zu bytes failed.\n", slen);
+				exit(1);
+			}
+
 			uint8_t dest[dest_len];
 			if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
 				fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));

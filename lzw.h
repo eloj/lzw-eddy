@@ -63,6 +63,8 @@ const char *lzw_strerror(enum lzw_errors errnum);
 	Once all input has been consumed, 0 is returned.
 	On error, a negative integer is returned.
 
+	Neither `src` nor `dest` may be NULL.
+
 	`state`should be zero-initialized.
 
 	`dlen` should be at least 4096 bytes, unless the input is known to
@@ -82,6 +84,8 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 	Returns the number of bytes compressed into `dest`.
 	Once all input has been consumed, 0 is returned.
 	On error, a negative integer is returned.
+
+	Neither `src` nor `dest` may be NULL.
 
 	`state`should be zero-initialized.
 */
