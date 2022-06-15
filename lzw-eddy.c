@@ -65,7 +65,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	if (ofile) {
 		uint8_t *src = malloc(slen);
 		if (!src) {
-			fprintf(stderr, "ERROR: memory allocation of %zu bytes failed.\n", slen);
+			fprintf(stderr, "ERROR: memory allocation of %lu bytes failed.\n", slen);
 			exit(1);
 		}
 		uint8_t dest[4096];
@@ -124,7 +124,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 			}
 			uint8_t *src = malloc(slen);
 			if (!src) {
-				fprintf(stderr, "ERROR: memory allocation of %zu bytes failed.\n", slen);
+				fprintf(stderr, "ERROR: memory allocation of %lu bytes failed.\n", slen);
 				exit(1);
 			}
 
