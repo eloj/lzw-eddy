@@ -1,6 +1,6 @@
 #!/bin/bash
-TMPFILED=$(tempfile)
-TMPFILEC=$(tempfile)
+TMPFILED=$(mktemp)
+TMPFILEC=$(mktemp)
 trap "{ rm $TMPFILED $TMPFILEC; }" EXIT
 set -e
 
