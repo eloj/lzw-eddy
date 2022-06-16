@@ -15,7 +15,7 @@ extern "C" {
 // Going outside of 9- to 12-bit codes is untested, and beyond 16-bit codes will require code changes.
 #define LZW_MIN_CODE_WIDTH 9
 #define LZW_MAX_CODE_WIDTH 12
-#define LZW_MAX_CODES (1UL << LZW_MAX_CODE_WIDTH)
+#define LZW_MAX_CODE (1UL << LZW_MAX_CODE_WIDTH)
 
 enum lzw_errors {
 	LZW_NOERROR = 0,
@@ -32,7 +32,7 @@ struct lzw_string_table {
 	uint32_t code_width;
 	uint16_t next_code;
 	uint16_t prev_code;
-	lzw_node node[LZW_MAX_CODES]; // 16K at 12-bit codes.
+	lzw_node node[LZW_MAX_CODE + 1]; // 16K at 12-bit codes.
 };
 
 struct lzw_state {
@@ -382,7 +382,7 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 			uint16_t parent = code;
 			uint16_t parent_len = 1 + lzw_node_prefix_len(state->tree.node[parent]);
 
-			assert(state->tree.next_code < LZW_MAX_CODES);
+			assert(state->tree.next_code <= LZW_MAX_CODE);
 
 			// printf("New prefix from src[%zu], adding symbol '%c' (%02x) as code %d /w parent %d\n", state->rptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
 			state->tree.node[state->tree.next_code] = lzw_make_node(symbol, parent, parent_len);
@@ -394,7 +394,7 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 			lzw_output_code(state, parent);
 
 			// Handle code width expansion.
-			if (state->tree.next_code > mask_from_width(state->tree.code_width) || state->tree.next_code == LZW_MAX_CODES - 1) {
+			if (state->tree.next_code > mask_from_width(state->tree.code_width)) {
 				// printf("DEBUG: Expanding bitwidth to %d\n", state->tree.code_width + 1);
 				if (state->tree.code_width >= LZW_MAX_CODE_WIDTH) {
 					// printf("DEBUG: Max code-width reached -- Issuing clear/reset\n");
