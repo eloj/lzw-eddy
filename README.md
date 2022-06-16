@@ -25,7 +25,7 @@ All code is provided under the [MIT License](LICENSE).
 	* Low stack usage.
 * Compressor can be 'short-stroked' to limit decompression buffer size requirement.
 * No scratch buffer used when decompressing.
-* [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean (at least one cycle)
+* Releases are [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean (at least one cycle)
 
 ## To Do
 
