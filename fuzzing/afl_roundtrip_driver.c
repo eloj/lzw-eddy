@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			// Verify input size vs decompressed size.
-			if (slen != (ssize_t)decomp_size) {
+			if (slen != decomp_size) {
 				abort();
 			}
 
