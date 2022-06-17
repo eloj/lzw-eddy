@@ -1,6 +1,6 @@
 /*
 	Variable-length code LZW compressor and decompressor for fixed-memory decoding.
-	Copyright (c) 2020-2021, Eddy L O Jansson. Licensed under The MIT License.
+	Copyright (c) 2020-2022, Eddy L O Jansson. Licensed under The MIT License.
 
 	See https://github.com/eloj/lzw-eddy
 */
@@ -95,9 +95,9 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 
 /*
 	Variable-length code LZW compressor and decompressor for fixed-memory decoding.
-	Copyright (c) 2020-2021, Eddy L O Jansson. Licensed under The MIT License.
+	Copyright (c) 2020-2022, Eddy L O Jansson. Licensed under The MIT License.
 
-	Single-Header Library Implementation
+	See https://github.com/eloj/lzw-eddy
 */
 #include <stdlib.h>
 #include <string.h>
