@@ -14,7 +14,9 @@ extern "C" {
 
 // Going outside of 9- to 12-bit codes is untested, and beyond 16-bit codes will require code changes.
 #define LZW_MIN_CODE_WIDTH 9
+#ifndef LZW_MAX_CODE_WIDTH
 #define LZW_MAX_CODE_WIDTH 12
+#endif
 #define LZW_MAX_CODE (1UL << LZW_MAX_CODE_WIDTH)
 
 enum lzw_errors {
@@ -25,7 +27,11 @@ enum lzw_errors {
 };
 
 // This type must be large enough for SYMBOL_BITS + LZW_MAX_CODE_WIDTH*2 bits.
+#if LZW_MAX_CODE_WIDTH > 12
+typedef uint64_t lzw_node;
+#else
 typedef uint32_t lzw_node;
+#endif
 typedef uint32_t bitres_t;
 
 struct lzw_string_table {
