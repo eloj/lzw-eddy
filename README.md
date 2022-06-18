@@ -6,12 +6,11 @@ A basic headerless LZW compressor and decompressor. Supports variable length cod
 
 The algorithm implemented by this code was widely distributed in the
 old DOS days in places like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html) and a popular book on compression,
-probably due to its use in GIF. This resulted in it being used in [all sorts of places](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/).
+probably due to its use in GIF. This resulted in it being used in all sorts of places.
+Specifically this was written to be [bit-compatible with Puzznic](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/) (MS-DOS).
 
-This code was developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
+Code developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
-
-This code was written to be bit-compatible with Puzznic (MS-DOS).
 
 All code is provided under the [MIT License](LICENSE).
 
@@ -54,7 +53,7 @@ compatible with data generated for the _exact_ same bit range.
 
 `lzw-eddy` is a simple command-line compressor built using the library.
 
-You can pass BITWIDTH=<num> to build it with a non-default string table size.
+You can pass BITWIDTH=\<num\> to build it with a non-default string table size.
 
 ```bash
 $ make -B BITWIDTH=14 && ./lzw-eddy -c lzw.h -o /dev/null
