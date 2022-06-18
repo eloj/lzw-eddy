@@ -1,4 +1,5 @@
 #define LZW_EDDY_IMPLEMENTATION
+// #define LZW_MAX_CODE_WIDTH 14
 #include "lzw.h"
 
 #include <stdio.h>
@@ -87,7 +88,10 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 			written += res;
 		}
 		if (res == 0) {
-			printf("%zd bytes written to output (longest prefix=%zu).\n", written, state.longest_prefix);
+			printf("%zd bytes written to output, reduction=%2.02f%% (longest prefix=%zu).\n",
+					written,
+					(1.0f - ((float)written/slen)) * 100.0f,
+					state.longest_prefix);
 		} else if (res < 0) {
 			fprintf(stderr, "Compression returned error: %s (err: %zd)\n", lzw_strerror(res), res);
 		}
@@ -143,7 +147,10 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				written += res;
 			}
 			if (res == 0) {
-				printf("%zd bytes written to output (longest prefix=%zu).\n", written, state.longest_prefix);
+				printf("%zd bytes written to output, expansion=%2.2f%% (longest prefix=%zu).\n",
+					written,
+					((float)written/slen - 1.0f) * 100.0f,
+					state.longest_prefix);
 			} else if (res < 0) {
 				fprintf(stderr, "Decompression returned error: %s (err: %zd)\n", lzw_strerror(res), res);
 			}
@@ -165,7 +172,7 @@ int main(int argc, char *argv []) {
 		return EXIT_SUCCESS;
 	}
 
-	printf("lzw-eddy %s file %s\n", compress ? "compressing" : "decompressing", infile);
+	printf("lzw-eddy %s file %s (%d-%d bits)\n", compress ? "compressing" : "decompressing", infile, LZW_MIN_CODE_WIDTH, LZW_MAX_CODE_WIDTH);
 	if (compress) {
 		lzw_compress_file(infile, outfile);
 	} else {
