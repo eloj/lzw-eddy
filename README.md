@@ -11,6 +11,8 @@ probably due to its use in GIF. This resulted in it being used in [all sorts of 
 This code was developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
 
+This code was written to be bit-compatible with Puzznic (MS-DOS).
+
 All code is provided under the [MIT License](LICENSE).
 
 [![Build status](https://github.com/eloj/lzw-eddy/workflows/build/badge.svg)](https://github.com/eloj/lzw-eddy/actions/workflows/c-cpp.yml)
