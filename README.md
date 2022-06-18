@@ -2,7 +2,8 @@
 # Simple LZW (Lempel-Ziv-Welch) Compressor & Decompressor
 
 A basic headerless LZW compressor and decompressor. Supports variable length codes between
-9 and 12 bits per default, but up to 15-bits work.
+9 and 12 bits per default, but the upper bound is a compile-time constant that can be adjusted between
+9 and 16 bits.
 
 The algorithm implemented by this code was widely distributed in the
 old DOS days in places like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html) and a popular book on compression,
@@ -20,11 +21,11 @@ All code is provided under the [MIT License](LICENSE).
 
 * Single-Header Library.
 * Fixed memory requirements:
-	* Uses ~16KiB for state/string table.
-	* ~4KiB destination buffer recommended, but can go much lower in practice.
+	* Uses ~16KiB for state/string table by default.
+	* At least ~4KiB output buffer recommended, but can go _much_ lower in practice.
 	* Low stack usage.
 * Compressor can be 'short-stroked' to limit decompression buffer size requirement.
-* No scratch buffer used when decompressing.
+* Fast decompression. _Very_ slow compression.
 * Releases are [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean (at least one cycle)
 
 ## C interface
@@ -36,7 +37,7 @@ const char *lzw_strerror(enum lzw_errors errnum);
 ```
 
 * State must be zero-initialized.
-* The return value is the number of bytes compressed or decompressed into `dest`. Once all input has been processed, `0` is returned.
+* The return value is the number of bytes compressed or decompressed into `dest`. Once all input has been processed, `0` is returned. See [example](#example).
 * On error, a negative integer is returned.
 
 All input is assumed to be available at `src`; e.g it is NOT allowed to switch `src` during encoding/decoding. A function
@@ -45,13 +46,25 @@ to 'hand over' state to new input could be added, but I don't have the need.
 ## Usage
 
 In your code, define `LZW_EDDY_IMPLEMENTATION` and then `#include "lzw.h"`. This will give you a decoder/encoder _specific_
-for 9-12 bit codes. You can optionally define `LZW_MAX_CODE_WIDTH` to a value between 9 and 15 before including the header to
-change this default. In general, due to the way the dictionary is reconstructed during decompression, a decoder is only
-compatible with data generated for the _exact_ same bit range.
+for 9-12 bit codes, and a string table for 4096 entries.
+
+You can optionally define `LZW_MAX_CODE_WIDTH` to a value between 9 and 16 before including the header to
+change this compile-time default. Due to the way the dictionary is reconstructed during decompression,
+a decoder is only compatible with data generated for the _exact_ same size string table.
+
+12-bit codes are probably the sweet spot for most applications. Larger codes means more bits are needed to
+encode newer strings, and because the string table is larger, the dictionary doesn't adapt as fast as it
+would if it was smaller. This combination means that a larger table can result in worse compression ratio.
 
 ## CLI compressor
 
 `lzw-eddy` is a simple command-line compressor built using the library.
+
+```bash
+$ ./lzw-eddy
+Usage: ./lzw-eddy -c file|-d file -o outfile
+Compiled Configuration: LZW_MIN_CODE_WIDTH=9, LZW_MAX_CODE_WIDTH=12, LZW_MAX_CODES=4096, sizeof(lzw_state)=16440
+```
 
 You can pass BITWIDTH=\<num\> to build it with a non-default string table size.
 

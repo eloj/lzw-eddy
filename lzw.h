@@ -33,11 +33,12 @@ typedef uint64_t lzw_node;
 typedef uint32_t lzw_node;
 #endif
 typedef uint32_t bitres_t;
+typedef uint16_t code_t;
 
 struct lzw_string_table {
 	uint32_t code_width;
-	uint16_t next_code;
-	uint16_t prev_code;
+	code_t next_code;
+	code_t prev_code;
 	lzw_node node[LZW_MAX_CODES]; // 16K at 12-bit codes.
 };
 
@@ -133,15 +134,15 @@ static inline uint8_t lzw_node_symbol(lzw_node node) {
 	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
 }
 
-static inline uint16_t lzw_node_parent(lzw_node node) {
+static inline code_t lzw_node_parent(lzw_node node) {
 	return (node >> PARENT_SHIFT) & PARENT_MASK;
 }
 
-static inline uint16_t lzw_node_prefix_len(lzw_node node) {
+static inline code_t lzw_node_prefix_len(lzw_node node) {
 	return (node >> PREFIXLEN_SHIFT) & PREFIXLEN_MASK;
 }
 
-static inline lzw_node lzw_make_node(uint8_t symbol, uint16_t parent, uint16_t len) {
+static inline lzw_node lzw_make_node(uint8_t symbol, code_t parent, code_t len) {
 	lzw_node node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | (symbol << SYMBOL_SHIFT);
 	return node;
 }
@@ -231,7 +232,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 
 		if (code <= state->tree.next_code) {
 			bool known_code = code < state->tree.next_code;
-			uint16_t tcode = known_code ? code : state->tree.prev_code;
+			code_t tcode = known_code ? code : state->tree.prev_code;
 			size_t prefix_len = 1 + lzw_node_prefix_len(state->tree.node[tcode]);
 			uint8_t symbol = 0;
 
@@ -296,7 +297,7 @@ ssize_t lzw_decompress(struct lzw_state *state, uint8_t *src, size_t slen, uint8
 	return wptr;
 }
 
-static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, size_t len, uint16_t *code) {
+static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, size_t len, code_t *code) {
 	// printf("Looking up prefix '%.*s' from %p to %p (len=%zu)\n", (int)(len), prefix, prefix, prefix+len, len);
 	assert (len > 0);
 
@@ -309,6 +310,7 @@ static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, si
 	// NOTE: It's imperative that we search newest to oldest. When limiting the prefix length, we'll
 	// end up with duplicate prefixes, and only the newest code is valid for the decoder to stay in sync.
 	for (size_t i=state->tree.next_code - 1 ; i >= CODE_FIRST ; --i) {
+		assert(i < LZW_MAX_CODES);
 		lzw_node node = state->tree.node[i];
 
 		if (len - 1 == lzw_node_prefix_len(node)) {
@@ -329,8 +331,8 @@ static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, si
 	return false;
 }
 
-inline static void lzw_output_code(struct lzw_state *state, uint16_t code) {
-	assert(state->bitres_len + state->tree.code_width < sizeof(bitres_t)*8);
+inline static void lzw_output_code(struct lzw_state *state, code_t code) {
+	assert(state->bitres_len + state->tree.code_width <= sizeof(bitres_t)*8); // maybe increase size of bitres_t?
 	state->bitres |= code << state->bitres_len;
 	state->bitres_len += state->tree.code_width;
 	state->tree.prev_code = code;
@@ -364,18 +366,15 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 		lzw_output_code(state, CODE_CLEAR);
 	}
 
-	uint16_t code = CODE_EOF;
+	code_t code = CODE_EOF;
 	size_t prefix_end = 0;
 	state->wptr = 0;
-
-	size_t old_wptr __attribute__((unused)) = 0; // DEBUG AID.
 
 	while (state->rptr + prefix_end < slen) {
 		// Ensure we have enough space for flushing codes.
 		if (state->wptr + (state->tree.code_width >> 3) + 1 + 2 + 2 > dlen) { // Also reserve bits for worst-case 16-bit CLEAR + EOF code
 			return state->wptr;
 		}
-		old_wptr = state->wptr;
 
 		++prefix_end;
 		// lookup prefix in string table
@@ -386,19 +385,24 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 			assert(code != CODE_EOF);
 
 			uint8_t symbol = src[state->rptr + prefix_end - 1];
-			uint16_t parent = code;
-			uint16_t parent_len = 1 + lzw_node_prefix_len(state->tree.node[parent]);
+			code_t parent = code;
+			code_t parent_len = 1 + lzw_node_prefix_len(state->tree.node[parent]);
 
 			// Output code _before_ we potentially change the bit-width.
 			lzw_output_code(state, parent);
 
 			// Handle code width expansion.
-			if (state->tree.next_code == (1U << state->tree.code_width)) {
-				// printf("DEBUG: Expanding bitwidth to %d\n", state->tree.code_width + 1);
+			if (state->tree.next_code == (1UL << state->tree.code_width)
+#if LZW_MAX_CODE_WIDTH == 16
+				|| (state->tree.next_code == LZW_MAX_CODES - 1) /* special case for wrapping on 16-bit code_t */
+#endif
+			) {
 				if (state->tree.code_width < LZW_MAX_CODE_WIDTH) {
+					// printf("DEBUG: Expanding bitwidth to %d\n", state->tree.code_width + 1);
 					++state->tree.code_width;
 				} else {
 					// printf("DEBUG: Max code-width reached -- Issuing clear/reset\n");
+					lzw_flush_reservoir(state, dest, false);
 					lzw_output_code(state, CODE_CLEAR);
 					lzw_reset(state);
 					lzw_flush_reservoir(state, dest, false);
@@ -439,7 +443,6 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 
 	// if we didn't write anything, there shouldn't be any bits left in reservoir.
 	assert(!(state->wptr == 0 && state->bitres_len > 0));
-	assert(state->wptr - old_wptr < 1 + 2 + 2);
 
 	// printf("DEBUG: Returning %zu bytes written to caller.\n", state->wptr);
 

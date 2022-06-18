@@ -169,6 +169,12 @@ int main(int argc, char *argv []) {
 
 	if (!infile || !outfile) {
 		printf("Usage: %s -c file|-d file -o outfile\n", argv[0]);
+		printf("Compiled Configuration: LZW_MIN_CODE_WIDTH=%d, LZW_MAX_CODE_WIDTH=%d, LZW_MAX_CODES=%ld, sizeof(lzw_state)=%zu\n",
+			LZW_MIN_CODE_WIDTH,
+			LZW_MAX_CODE_WIDTH,
+			LZW_MAX_CODES,
+			sizeof(struct lzw_state)
+		);
 		return EXIT_SUCCESS;
 	}
 
