@@ -17,7 +17,7 @@ extern "C" {
 #ifndef LZW_MAX_CODE_WIDTH
 #define LZW_MAX_CODE_WIDTH 12
 #endif
-#define LZW_MAX_CODE (1UL << LZW_MAX_CODE_WIDTH)
+#define LZW_MAX_CODES (1UL << LZW_MAX_CODE_WIDTH)
 
 enum lzw_errors {
 	LZW_NOERROR = 0,
@@ -38,7 +38,7 @@ struct lzw_string_table {
 	uint32_t code_width;
 	uint16_t next_code;
 	uint16_t prev_code;
-	lzw_node node[LZW_MAX_CODE + 1]; // 16K at 12-bit codes.
+	lzw_node node[LZW_MAX_CODES]; // 16K at 12-bit codes.
 };
 
 struct lzw_state {
@@ -151,8 +151,8 @@ static inline uint32_t mask_from_width(uint32_t width) {
 }
 
 static void lzw_reset(struct lzw_state *state) {
-	state->tree.next_code = CODE_FIRST;
 	state->tree.prev_code = CODE_EOF;
+	state->tree.next_code = CODE_FIRST;
 	state->tree.code_width = LZW_MIN_CODE_WIDTH;
 	state->must_reset = false;
 }
@@ -333,6 +333,7 @@ inline static void lzw_output_code(struct lzw_state *state, uint16_t code) {
 	assert(state->bitres_len + state->tree.code_width < sizeof(bitres_t)*8);
 	state->bitres |= code << state->bitres_len;
 	state->bitres_len += state->tree.code_width;
+	state->tree.prev_code = code;
 
 	// printf("<CODE:%d width=%d reservoir:%02d/%zu:%02x>\n", code, state->tree.code_width, state->bitres_len, sizeof(bitres_t)*8, state->bitres);
 }
@@ -388,32 +389,30 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 			uint16_t parent = code;
 			uint16_t parent_len = 1 + lzw_node_prefix_len(state->tree.node[parent]);
 
-			assert(state->tree.next_code <= LZW_MAX_CODE);
-
-			// printf("New prefix from src[%zu], adding symbol '%c' (%02x) as code %d /w parent %d\n", state->rptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
-			state->tree.node[state->tree.next_code] = lzw_make_node(symbol, parent, parent_len);
-			if (parent_len >= state->longest_prefix) {
-				state->longest_prefix = parent_len;
-			}
-
 			// Output code _before_ we potentially change the bit-width.
 			lzw_output_code(state, parent);
 
 			// Handle code width expansion.
-			if (state->tree.next_code > mask_from_width(state->tree.code_width)) {
+			if (state->tree.next_code == (1U << state->tree.code_width)) {
 				// printf("DEBUG: Expanding bitwidth to %d\n", state->tree.code_width + 1);
-				if (state->tree.code_width >= LZW_MAX_CODE_WIDTH) {
+				if (state->tree.code_width < LZW_MAX_CODE_WIDTH) {
+					++state->tree.code_width;
+				} else {
 					// printf("DEBUG: Max code-width reached -- Issuing clear/reset\n");
 					lzw_output_code(state, CODE_CLEAR);
 					lzw_reset(state);
 					lzw_flush_reservoir(state, dest, false);
-					state->tree.next_code--; // Undo later increase
-				} else {
-					++state->tree.code_width;
+					state->tree.next_code = CODE_EOF; // XXX: Required for compatibility with puzznic.
 				}
 			}
-			state->tree.prev_code = state->tree.next_code;
-			state->tree.next_code++;
+
+			assert(state->tree.next_code < LZW_MAX_CODES);
+			// printf("New prefix from src[%zu], adding symbol '%c' (%02x) as code %d /w parent %d\n", state->rptr + prefix_end, symbol, symbol, state->tree.next_code, parent);
+			state->tree.node[state->tree.next_code++] = lzw_make_node(symbol, parent, parent_len);
+
+			if (parent_len > state->longest_prefix) {
+				state->longest_prefix = parent_len;
+			}
 
 			state->rptr += parent_len;
 			prefix_end = 0;
@@ -425,7 +424,6 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 		// printf("DEBUG: Last prefix existed, writing existing code %d to stream\n", code);
 		lzw_output_code(state, code);
 		lzw_flush_reservoir(state, dest, false);
-		state->tree.prev_code = code;
 		state->rptr += prefix_end;
 		prefix_end = 0;
 	}
@@ -437,7 +435,6 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 		|| (state->wptr == 0 && state->bitres_len > 0)) {
 		lzw_output_code(state, CODE_EOF);
 		lzw_flush_reservoir(state, dest, true);
-		state->tree.prev_code = CODE_EOF;
 	}
 
 	// if we didn't write anything, there shouldn't be any bits left in reservoir.
