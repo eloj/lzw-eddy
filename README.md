@@ -26,7 +26,7 @@ All code is provided under the [MIT License](LICENSE).
 	* Low stack usage.
 * Compressor can be 'short-stroked' to limit decompression buffer size requirement.
 * Fast decompression. _Very_ slow compression.
-* Releases are [Valgrind](https://valgrind.org/) and [AFL](https://lcamtuf.coredump.cx/afl/) clean (at least one cycle)
+* Releases are [Valgrind](https://valgrind.org/) and [AFL++](https://aflplus.plus/) clean (at least one cycle)
 
 ## C interface
 
@@ -46,7 +46,7 @@ to 'hand over' state to new input could be added, but I don't have the need.
 ## Usage
 
 In your code, define `LZW_EDDY_IMPLEMENTATION` and then `#include "lzw.h"`. This will give you a decoder/encoder _specific_
-for 9-12 bit codes, and a string table for 4096 entries.
+for 9-12 bit codes, giving a string table of 4096 entries.
 
 You can optionally define `LZW_MAX_CODE_WIDTH` to a value between 9 and 16 before including the header to
 change this compile-time default. Due to the way the dictionary is reconstructed during decompression,
@@ -55,6 +55,9 @@ a decoder is only compatible with data generated for the _exact_ same size strin
 12-bit codes are probably the sweet spot for most applications. Larger codes means more bits are needed to
 encode newer strings, and because the string table is larger, the dictionary doesn't adapt as fast as it
 would if it was smaller. This combination means that a larger table can result in worse compression ratio.
+
+The encoder could theoretically be improved to flush the existing string table if few long matches are made over
+some window, but no such adaptability is present.
 
 ## CLI compressor
 

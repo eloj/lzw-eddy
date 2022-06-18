@@ -12,8 +12,9 @@ extern "C" {
 #include <stdbool.h>
 #include <sys/types.h> // for ssize_t
 
-// Going outside of 9- to 12-bit codes is untested, and beyond 16-bit codes will require code changes.
 #define LZW_MIN_CODE_WIDTH 9
+// 9 to 16-bit codes should all work, but 12 is the default for a reason.
+// Going beyond 16-bit codes would require code changes. More isn't better either.
 #ifndef LZW_MAX_CODE_WIDTH
 #define LZW_MAX_CODE_WIDTH 12
 #endif
@@ -45,6 +46,7 @@ struct lzw_string_table {
 struct lzw_state {
 	struct lzw_string_table tree;
 
+	// If we ever need more of these, change to a flag-word.
 	bool	 was_init;
 	bool	 must_reset;
 
