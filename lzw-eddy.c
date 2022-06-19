@@ -10,13 +10,23 @@
 #include <stdbool.h>
 #include <errno.h>
 
+#include "build_const.h"
+
 static const char *infile;
 static const char *outfile;
 static int compress = 0;
 static size_t maxlen = 0;
 
+static void print_version(void) {
+	printf("%s <%.*s>\n", LZW_EDDY_VERSION, 8, build_hash);
+}
+
+static void print_banner(void) {
+	printf("lzw-eddy ");
+	print_version();
+}
+
 static int parse_args(int argc, char **argv) {
-	// TODO: just use getopt.h?
 	for (int i=1 ; i < argc ; ++i) {
 		const char *arg = argv[i];
 		// "argv[argc] shall be a null pointer", section 5.1.2.2.1
@@ -43,6 +53,11 @@ static int parse_args(int argc, char **argv) {
 						maxlen = atoi(value);
 						break;
 				}
+			} else {
+				if (*arg == 'v' || *arg == 'V' || strcmp(arg, "-version") == 0) {
+					print_version();
+					exit(0);
+				}
 			}
 		}
 	}
@@ -61,7 +76,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
-	printf("Compressing %zu bytes.\n", (size_t)slen);
+	printf("Compressing '%s', %zu bytes.\n", srcfile, (size_t)slen);
 	FILE *ofile = fopen(destfile, "wb");
 	if (ofile) {
 		uint8_t *src = malloc(slen);
@@ -88,8 +103,9 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 			written += res;
 		}
 		if (res == 0) {
-			printf("%zd bytes written to output, reduction=%2.02f%% (longest prefix=%zu).\n",
+			printf("%zd bytes written to '%s', reduction=%2.02f%% (longest prefix=%zu).\n",
 					written,
+					destfile,
 					(1.0f - ((float)written/slen)) * 100.0f,
 					state.longest_prefix);
 		} else if (res < 0) {
@@ -115,7 +131,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 	fseek(ifile, 0, SEEK_SET);
 
 	if (slen > 0) {
-		printf("Decompressing %zu bytes.\n", (size_t)slen);
+		printf("Decompressing '%s', %zu bytes.\n", srcfile, (size_t)slen);
 		FILE *ofile = stdout;
 		if (strcmp(destfile, "-") != 0) {
 			ofile = fopen(destfile, "wb");
@@ -147,8 +163,9 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				written += res;
 			}
 			if (res == 0) {
-				printf("%zd bytes written to output, expansion=%2.2f%% (longest prefix=%zu).\n",
+				printf("%zd bytes written to '%s', expansion=%2.2f%% (longest prefix=%zu).\n",
 					written,
+					destfile,
 					((float)written/slen - 1.0f) * 100.0f,
 					state.longest_prefix);
 			} else if (res < 0) {
@@ -164,12 +181,13 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 }
 
 int main(int argc, char *argv []) {
-
 	parse_args(argc, argv);
+
+	print_banner();
 
 	if (!infile || !outfile) {
 		printf("Usage: %s -c file|-d file -o outfile\n", argv[0]);
-		printf("Compiled Configuration: LZW_MIN_CODE_WIDTH=%d, LZW_MAX_CODE_WIDTH=%d, LZW_MAX_CODES=%ld, sizeof(lzw_state)=%zu\n",
+		printf("Compiled Configuration:\n LZW_MIN_CODE_WIDTH=%d, LZW_MAX_CODE_WIDTH=%d, LZW_MAX_CODES=%ld, sizeof(lzw_state)=%zu\n",
 			LZW_MIN_CODE_WIDTH,
 			LZW_MAX_CODE_WIDTH,
 			LZW_MAX_CODES,
@@ -178,7 +196,6 @@ int main(int argc, char *argv []) {
 		return EXIT_SUCCESS;
 	}
 
-	printf("lzw-eddy %s file %s (%d-%d bits)\n", compress ? "compressing" : "decompressing", infile, LZW_MIN_CODE_WIDTH, LZW_MAX_CODE_WIDTH);
 	if (compress) {
 		lzw_compress_file(infile, outfile);
 	} else {

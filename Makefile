@@ -36,7 +36,17 @@ CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(MISCFLAGS)
 
 all: lzw-eddy
 
-lzw-eddy: lzw-eddy.c lzw.h
+FORCE:
+
+build_const.h: FORCE
+	@git show-ref --head --hash | head -n 1 | awk '{ printf "const char *build_hash = \"%s\";\n",$$1 }' > $@.tmp
+	@if test -r $@ ; then \
+		(cmp $@.tmp $@ && rm $@.tmp) || mv -f $@.tmp $@ ; \
+	else \
+		mv $@.tmp $@ ; \
+	fi
+
+lzw-eddy: lzw-eddy.c lzw.h build_const.h
 	$(CC) $(CFLAGS) $< -o $@
 
 afl-%: fuzzing/afl_*.c lzw.h
@@ -57,5 +67,5 @@ backup:
 
 clean:
 	@echo -e $(YELLOW)Cleaning$(NC)
-	rm -f lzw-eddy afl-*-driver core core.*
+	rm -f lzw-eddy build_const.h afl-*-driver core core.*
 	rm -rf packages
