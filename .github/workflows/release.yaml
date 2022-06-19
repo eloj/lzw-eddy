@@ -23,10 +23,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: lzw-eddy ${{ github.ref }}
           draft: true
           prerelease: false
+          tag_name: ${{ github.ref }}
+          release_name: lzw-eddy ${{ github.ref }}
+          body_path: CHANGELOG.md
       - name: Upload linux package
         uses: actions/upload-release-asset@v1
         env:
@@ -35,27 +36,4 @@ jobs:
           upload_url: ${{ steps.release.outputs.upload_url }}
           asset_path: ./packages/lzw-eddy.linux-x86_64.tar.gz
           asset_name: lzw-eddy.linux-x86_64.tar.gz
-          asset_content_type: application/gzip
-    runs-on: windows-2022
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-            fetch-depth: 0
-      - uses: msys2/setup-msys2@v2
-        with:
-          install: gcc make
-      - name: Build windows package
-        run: ./package.sh windows
-      - name: Upload windows package
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ./packages/lzw-eddy.windows-x86_64.tar.gz
-          asset_name: lzw-eddy.windows-x86_64.tar.gz
           asset_content_type: application/gzip
