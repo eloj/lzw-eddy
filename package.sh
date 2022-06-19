@@ -19,6 +19,11 @@ if [[ "${OS}" == "linux" || "${OS}" == "windows" ]]; then
 	mkdir -p ${RP}
 	cp ${FILES} ${RP}
 	tar -C ${BP} -czvf packages/lzw-eddy.${OS}-${ARCH}.tar.gz lzw-eddy
+	if [ "${OS}" == "windows" ]; then
+		pushd .
+		cd ${RP} && 7z -bd a ../../lzw-eddy.${OS}-${ARCH}.7z *
+		popd
+	fi
 	rm -r ${BP}
 else
 	echo "Unknown target OS: ${OS}"
