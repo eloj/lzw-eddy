@@ -1,0 +1,38 @@
+---
+name: release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+            fetch-depth: 0
+      - name: Build linux package
+        run: ./package.sh linux
+      - name: Create release
+        uses: actions/create-release@v1
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: lzw-eddy ${{ github.ref }}
+          draft: true
+          prerelease: false
+      - name: Upload linux archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ./packages/lzw-eddy.linux-amd64.tar.gz
+          asset_name: lzw-eddy.linux-amd64.tar.gz
+          asset_content_type: application/gzip

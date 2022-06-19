@@ -21,7 +21,8 @@ ifdef PERF
 endif
 
 ifdef OPTIMIZED
-	MISCFLAGS+=-DNDEBUG -Werror
+# On mingw, -static avoids dep on libssp-0.dll when built with -fstack-protector
+	MISCFLAGS+=-DNDEBUG -Werror -static
 else
 	MISCFLAGS+=$(DEVFLAGS)
 endif
@@ -57,3 +58,4 @@ backup:
 clean:
 	@echo -e $(YELLOW)Cleaning$(NC)
 	rm -f lzw-eddy afl-*-driver core core.*
+	rm -rf packages
