@@ -26,7 +26,10 @@ All code is provided under the [MIT License](LICENSE).
 	* Low stack usage.
 * Compressor can be 'short-stroked' to limit decompression buffer size requirement.
 * Fast decompression. _Very_ slow compression.
-* Releases are [Valgrind](https://valgrind.org/) and [AFL++](https://aflplus.plus/) clean (at least one cycle)
+* Releases are:
+	* [Valgrind](https://valgrind.org/) clean,
+	* [scan-build](https://clang-analyzer.llvm.org/scan-build.html) clean, and
+	* [AFL++](https://aflplus.plus/) clean (for some reasonable run-time).
 
 ## C interface
 
