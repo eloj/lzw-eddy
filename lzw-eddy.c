@@ -32,7 +32,7 @@ static int parse_args(int argc, char **argv) {
 		// "argv[argc] shall be a null pointer", section 5.1.2.2.1
 		const char *value = argv[i+1];
 
-		if (*arg == '-') {
+		if (arg && *arg == '-') {
 			++arg;
 			if (value) {
 				switch (*arg) {
