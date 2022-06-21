@@ -1,14 +1,16 @@
 
-# Simple LZW (Lempel-Ziv-Welch) Compressor & Decompressor
+# Simple LZW (Lempel-Ziv-Welch) Library, Compressor & Decompressor
 
-A basic headerless LZW compressor and decompressor. Supports variable length codes between
-9 and 12 bits per default, but the upper bound is a compile-time constant that can be adjusted between
+A single-header library and basic headerless compressor and decompressor. Supports variable length codes
+between 9 and 12 bits per default, but the upper bound is a compile-time constant that can be adjusted between
 9 and 16 bits.
 
-The algorithm implemented by this code was widely distributed in the
-old DOS days in places like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html) and a popular book on compression,
+The algorithm implemented by this code was widely distributed in the old MS-DOS days in places
+like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html) and a popular book on compression,
 probably due to its use in GIF. This resulted in it being used in all sorts of places.
-Specifically this was written to be [bit-compatible with Puzznic](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/) (MS-DOS).
+
+Specifically the code in this repository was written to be [bit-compatible with Puzznic](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/) (MS-DOS),
+and as such does not represent an effort to write "the best" LZW codec.
 
 Code developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
@@ -59,7 +61,7 @@ a decoder is only compatible with data generated for the _exact_ same size strin
 encode newer strings, and because the string table is larger, the dictionary doesn't adapt as fast as it
 would if it was smaller. This combination means that a larger table can result in worse compression ratio.
 
-The encoder could theoretically be improved to flush the existing string table if few long matches are made over
+The encoder could theoretically be improved to flush or prune the existing string table if few long matches are made over
 some window, but no such adaptability is present.
 
 ## CLI compressor
@@ -67,18 +69,19 @@ some window, but no such adaptability is present.
 `lzw-eddy` is a simple command-line compressor built using the library.
 
 ```bash
-$ ./lzw-eddy
+lzw-eddy 1.1.0-dev <45bf69f1>
 Usage: ./lzw-eddy -c file|-d file -o outfile
-Compiled Configuration: LZW_MIN_CODE_WIDTH=9, LZW_MAX_CODE_WIDTH=12, LZW_MAX_CODES=4096, sizeof(lzw_state)=16440
+Compiled Configuration:
+ LZW_MIN_CODE_WIDTH=9, LZW_MAX_CODE_WIDTH=12, LZW_MAX_CODES=4096, sizeof(lzw_state)=16440
 ```
 
 You can pass BITWIDTH=\<num\> to build it with a non-default string table size.
 
 ```bash
 $ make -B BITWIDTH=14 && ./lzw-eddy -c lzw.h -o /dev/null
-lzw-eddy compressing file dummy (9-14 bits)
-Compressing 14283 bytes.
-6798 bytes written to output, reduction=52.40% (longest prefix=16).
+lzw-eddy 1.1.0-dev <45bf69f1>
+Compressing 'lzw.h', 14566 bytes.
+6947 bytes written to output, reduction=52.31% (longest prefix=15).
 ```
 
 ## Example
