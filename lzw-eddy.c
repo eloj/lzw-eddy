@@ -76,7 +76,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
-	printf("Compressing '%s', %zu bytes.\n", srcfile, (size_t)slen);
+	printf("Compressing %zu bytes.\n", (size_t)slen);
 	FILE *ofile = fopen(destfile, "wb");
 	if (ofile) {
 		uint8_t *src = malloc(slen);
@@ -130,14 +130,15 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 	fseek(ifile, 0, SEEK_SET);
 
 	if (slen > 0) {
-		printf("Decompressing '%s', %zu bytes.\n", srcfile, (size_t)slen);
+		printf("Decompressing %zu bytes.\n", (size_t)slen);
 		FILE *ofile = stdout;
 		if (strcmp(destfile, "-") != 0) {
 			ofile = fopen(destfile, "wb");
 		}
 		if (ofile) {
-			size_t dest_len = 4096;
-			if (maxlen > 0) {
+			uint8_t dest[4096];
+			size_t dest_len = sizeof(dest);
+			if (maxlen > 0 && maxlen + 1 < dest_len) {
 				dest_len = maxlen + 1;
 				printf("WARNING: Restricting output buffer to %zu bytes.\n", dest_len);
 			}
@@ -147,7 +148,6 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				exit(1);
 			}
 
-			uint8_t dest[dest_len];
 			if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
 				fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
 				exit(EXIT_FAILURE);
@@ -157,7 +157,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 
 			ssize_t res, written = 0;
 			// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.
-			while ((res = lzw_decompress(&state, src, slen, dest, sizeof(dest))) > 0) {
+			while ((res = lzw_decompress(&state, src, slen, dest, dest_len)) > 0) {
 				fwrite(dest, res, 1, ofile);
 				written += res;
 			}

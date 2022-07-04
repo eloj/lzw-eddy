@@ -10,7 +10,13 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#else
 #include <sys/types.h> // for ssize_t
+#endif
 
 #define LZW_EDDY_MAJOR_VERSION 1
 #define LZW_EDDY_MINOR_VERSION 1
@@ -40,6 +46,7 @@ typedef uint32_t lzw_node;
 #endif
 typedef uint32_t bitres_t;
 typedef uint16_t code_t;
+typedef uint8_t sym_t;
 
 struct lzw_string_table {
 	uint32_t code_width;
@@ -120,7 +127,6 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 #include <stdbool.h>
 
 #define SYMBOL_BITS 8
-#define SYMBOL_SHIFT 0
 #define SYMBOL_MASK ((1UL << SYMBOL_BITS)-1)
 #define PARENT_BITS LZW_MAX_CODE_WIDTH
 #define PARENT_SHIFT SYMBOL_BITS
@@ -134,11 +140,12 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 #define CODE_FIRST (CODE_CLEAR+2)
 
 static_assert((LZW_MAX_CODE_WIDTH >= LZW_MIN_CODE_WIDTH), "");
+static_assert(SYMBOL_BITS <= sizeof(sym_t)*8, "sym_t type too small");
 static_assert((SYMBOL_BITS + PARENT_BITS + PREFIXLEN_BITS) <= sizeof(lzw_node)*8, "lzw_node type too small");
 static_assert((LZW_MAX_CODE_WIDTH*2 - 1) < sizeof(bitres_t)*8, "bitres_t type too small");
 
-static inline uint8_t lzw_node_symbol(lzw_node node) {
-	return (node >> SYMBOL_SHIFT) & SYMBOL_MASK;
+static inline sym_t lzw_node_symbol(lzw_node node) {
+	return node & SYMBOL_MASK;
 }
 
 static inline code_t lzw_node_parent(lzw_node node) {
@@ -149,8 +156,8 @@ static inline code_t lzw_node_prefix_len(lzw_node node) {
 	return (node >> PREFIXLEN_SHIFT) & PREFIXLEN_MASK;
 }
 
-static inline lzw_node lzw_make_node(uint8_t symbol, code_t parent, code_t len) {
-	lzw_node node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | (symbol << SYMBOL_SHIFT);
+static inline lzw_node lzw_make_node(sym_t symbol, code_t parent, code_t len) {
+	lzw_node node = (len << PREFIXLEN_SHIFT) | (parent << PARENT_SHIFT) | symbol;
 	return node;
 }
 
@@ -167,7 +174,7 @@ static void lzw_reset(struct lzw_state *state) {
 
 static void lzw_init(struct lzw_state *state) {
 	for (size_t i=0 ; i < (1UL << SYMBOL_BITS) ; ++i) {
-		state->tree.node[i] = lzw_make_node(i, 0, 0);
+		state->tree.node[i] = lzw_make_node((sym_t)i, 0, 0);
 	}
 	state->rptr = 0;
 	state->bitres = 0;
@@ -326,7 +333,7 @@ static bool lzw_string_table_lookup(struct lzw_state *state, uint8_t *prefix, si
 					break;
 				}
 				if (lzw_node_prefix_len(node) == 0) {
-					*code = i;
+					*code = (code_t)i;
 					assert(j == len - 1);
 					return true;
 				}
