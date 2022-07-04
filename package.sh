@@ -2,10 +2,11 @@
 #
 # Create a release package for a specific OS.
 #
+PROJECT=lzw-eddy
 OS=$1
 ARCH=${2:-`uname -m`}
 BP="packages/${OS}"
-RP="${BP}/lzw-eddy"
+RP="${BP}/${PROJECT}"
 FILES='lzw-eddy lzw.h LICENSE'
 
 if [ -z "${OS}" ]; then
@@ -13,15 +14,19 @@ if [ -z "${OS}" ]; then
 	exit 1
 fi
 
-if [[ "${OS}" == "linux" || "${OS}" == "windows" ]]; then
+if [[ "${OS}" == "linux" || "${OS}" == "msys2" ]]; then
 	echo "Packaging for ${OS}-${ARCH}"
 	OPTIMIZED=1 make -B lzw-eddy
+	if [ $? -ne 0 ]; then
+		echo "Build failed, packaging aborted."
+		exit 1
+	fi
 	mkdir -p ${RP}
 	cp ${FILES} ${RP}
-	tar -C ${BP} -czvf packages/lzw-eddy.${OS}-${ARCH}.tar.gz lzw-eddy
-	if [ "${OS}" == "windows" ]; then
+	tar -C ${BP} -czvf packages/${PROJECT}.${OS}-${ARCH}.tar.gz ${PROJECT}
+	if [ "${OS}" == "msys2" ]; then
 		pushd .
-		cd ${RP} && 7z -bd a ../../lzw-eddy.${OS}-${ARCH}.7z *
+		cd ${RP} && 7z -bd a ../../${PROJECT}.${OS}-${ARCH}.7z *
 		popd
 	fi
 	rm -r ${BP}
