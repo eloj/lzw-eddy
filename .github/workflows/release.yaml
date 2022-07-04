@@ -27,7 +27,7 @@ jobs:
           prerelease: false
           tag_name: ${{ github.ref }}
           release_name: lzw-eddy ${{ github.ref }}
-          body_path: CHANGELOG.md
+          body_path: CHANGES.md
       - name: Upload linux package
         uses: actions/upload-release-asset@v1
         env:
