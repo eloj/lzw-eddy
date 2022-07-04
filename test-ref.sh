@@ -3,7 +3,11 @@
 # Script that verifies that our reference files decompress and recompress to the exact original bitstream.
 # These files can not be redistributed though.
 #
-DATA=tests
+DATA=${1:-tests}
+if [[ ! -f ${DATA}/levelmp1.map ]] || [[ ! -f ${DATA}/extra.puz ]]; then
+	echo "Sorry, you don't seem to have the required reference files."
+	exit 1
+fi
 make
 test "$(sha256sum -b ${DATA}/levelmp1.map | cut -f 1 -d ' ')" = "8b57ee1e373c926182e47afd3d97477c07f98ad6dde076cdf3c3f703f250d46c" || (echo "Invalid input: hash mismatch for levelmp1.map" && exit 1) || exit 1
 test "$(sha256sum -b ${DATA}/extra.puz | cut -f 1 -d ' ')" = "f397e1e1b58d02ca6f469c8af0f5e50620621f267f48cb71af545f77d550607a" || (echo "Invalid input: hash mismatch for extra.puz" && exit 1) || exit 1
