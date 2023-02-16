@@ -61,6 +61,9 @@ fuzz: fuzz-roundtrip-driver
 test: lzw-eddy
 	${TEST_PREFIX} ./run-tests.sh
 
+cppcheck:
+	@cppcheck --verbose --error-exitcode=1 --enable=warning,performance,portability .
+
 backup:
 	@echo -e $(YELLOW)Making backup$(NC)
 	tar -cJf ../$(notdir $(CURDIR))-`date +"%Y-%m"`.tar.xz ../$(notdir $(CURDIR))

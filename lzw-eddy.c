@@ -81,7 +81,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	if (ofile) {
 		uint8_t *src = malloc(slen);
 		if (!src) {
-			fprintf(stderr, "ERROR: memory allocation of %lu bytes failed.\n", slen);
+			fprintf(stderr, "ERROR: memory allocation of %ld bytes failed.\n", slen);
 			exit(1);
 		}
 		uint8_t dest[4096];
@@ -144,7 +144,7 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 			}
 			uint8_t *src = malloc(slen);
 			if (!src) {
-				fprintf(stderr, "ERROR: memory allocation of %lu bytes failed.\n", slen);
+				fprintf(stderr, "ERROR: memory allocation of %ld bytes failed.\n", slen);
 				exit(1);
 			}
 
@@ -185,7 +185,7 @@ int main(int argc, char *argv []) {
 
 	if (!infile || !outfile) {
 		printf("Usage: %s -c file|-d file -o outfile\n", argv[0]);
-		printf("Compiled Configuration:\n LZW_MIN_CODE_WIDTH=%d, LZW_MAX_CODE_WIDTH=%d, LZW_MAX_CODES=%ld, sizeof(lzw_state)=%zu\n",
+		printf("Compiled Configuration:\n LZW_MIN_CODE_WIDTH=%d, LZW_MAX_CODE_WIDTH=%d, LZW_MAX_CODES=%lu, sizeof(lzw_state)=%zu\n",
 			LZW_MIN_CODE_WIDTH,
 			LZW_MAX_CODE_WIDTH,
 			LZW_MAX_CODES,

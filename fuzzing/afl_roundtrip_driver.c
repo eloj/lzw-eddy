@@ -60,14 +60,14 @@ int main(int argc, char *argv[]) {
 		if (input && slen > 0) {
 			// Compress input from fuzzer.
 			while ((res = lzw_compress(&statec0, input, slen, comp, dest_size)) > 0) { comp_size += res; };
-			printf("compressed:%zd (res=%zd)\n", comp_size, res);
+			printf("compressed:%zu (res=%zd)\n", comp_size, res);
 			if (res < 0) {
 				abort();
 			}
 
 			// Decompress the compressed data...
 			while ((res = lzw_decompress(&stated0, comp, comp_size, decomp, dest_size)) > 0) { decomp_size += res; };
-			printf("decompressed:%zd (res=%zd)\n", decomp_size, res);
+			printf("decompressed:%zu (res=%zd)\n", decomp_size, res);
 			if (res < 0) {
 				abort();
 			}
