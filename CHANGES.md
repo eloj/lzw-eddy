@@ -5,6 +5,7 @@ Stable releases have even minor version (e.g 1.0.x, 1.2.x), odd numbered minors 
 ## Release 1.1.0-dev - next
 
 * Now works on Microsoft's compiler (v19.32.31332)
+* Use argument -Z 1 to write/expect a 'compress-like' .Z header (NOT COMPATIBLE!)
 
 ## Release 1.0.0 - 2022-06-19
 
