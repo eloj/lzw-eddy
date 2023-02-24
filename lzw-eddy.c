@@ -15,6 +15,7 @@
 static const char *infile;
 static const char *outfile;
 static int compress = 0;
+static int use_zheader = 0; // Note: We're not 'compress' compatible!
 static size_t maxlen = 0;
 
 static void print_version(void) {
@@ -39,6 +40,9 @@ static int parse_args(int argc, char **argv) {
 					case 'c':
 						compress = 1;
 						infile = value;
+						break;
+					case 'Z':
+						use_zheader = atoi(value);
 						break;
 					case 'd':
 						/* fallthrough */
@@ -65,7 +69,7 @@ static int parse_args(int argc, char **argv) {
 	return 0;
 }
 
-static void lzw_compress_file(const char *srcfile, const char *destfile) {
+static void lzw_compress_file(const char *srcfile, const char *destfile, int zheader) {
 	FILE *ifile = fopen(srcfile, "rb");
 
 	if (!ifile) {
@@ -98,6 +102,14 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 		}
 
 		ssize_t res, written = 0;
+
+		if (zheader) {
+			uint8_t Zheader[3] = { 0x1F, 0x9D, 0x80 | LZW_MAX_CODE_WIDTH };
+			fwrite(Zheader, 3, 1, ofile);
+			printf(".Z (compress) header written.\n");
+			written += 3;
+		}
+
 		while ((res = lzw_compress(&state, src, slen, dest, sizeof(dest))) > 0) {
 			fwrite(dest, res, 1, ofile);
 			written += res;
@@ -118,7 +130,7 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 	fclose(ifile);
 }
 
-static void lzw_decompress_file(const char *srcfile, const char *destfile) {
+static void lzw_decompress_file(const char *srcfile, const char *destfile, int zheader) {
 	FILE *ifile = fopen(srcfile, "rb");
 
 	if (!ifile) {
@@ -153,11 +165,28 @@ static void lzw_decompress_file(const char *srcfile, const char *destfile) {
 				exit(EXIT_FAILURE);
 			}
 
+			if (zheader) {
+				if (src[0] != 0x1F || src[1] != 0x9D) {
+					fprintf(stderr, "ERROR: compress .Z header not detected\n");
+					exit(EXIT_FAILURE);
+				}
+				if ((src[2] & 0x0F) != LZW_MAX_CODE_WIDTH) {
+					fprintf(stderr, "ERROR: compress .Z header settings mismatch: %d bits/code indicated, compiled with LZW_MAX_CODE_WIDTH %d\n", (src[3] & 0x0F), LZW_MAX_CODE_WIDTH);
+					exit(EXIT_FAILURE);
+				}
+				if ((src[2] & 0xF0) != 0x80) {
+					fprintf(stderr, "ERROR: compress .Z header settings mismatch: block mode not set, or unknown bits\n");
+					exit(EXIT_FAILURE);
+				}
+				slen -= 3;
+				printf(".Z (compress) header valid (LZW_MAX_CODE_WIDTH=%d)\n", LZW_MAX_CODE_WIDTH);
+			}
+
 			struct lzw_state state = { 0 };
 
 			ssize_t res, written = 0;
 			// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.
-			while ((res = lzw_decompress(&state, src, slen, dest, dest_len)) > 0) {
+			while ((res = lzw_decompress(&state, src + (zheader ? 3 : 0), slen, dest, dest_len)) > 0) {
 				fwrite(dest, res, 1, ofile);
 				written += res;
 			}
@@ -195,9 +224,9 @@ int main(int argc, char *argv []) {
 	}
 
 	if (compress) {
-		lzw_compress_file(infile, outfile);
+		lzw_compress_file(infile, outfile, use_zheader);
 	} else {
-		lzw_decompress_file(infile, outfile);
+		lzw_decompress_file(infile, outfile, use_zheader);
 	}
 
 	return EXIT_SUCCESS;
