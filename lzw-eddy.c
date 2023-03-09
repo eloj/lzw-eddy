@@ -213,7 +213,7 @@ int main(int argc, char *argv []) {
 	print_banner();
 
 	if (!infile || !outfile) {
-		printf("Usage: %s -c file|-d file -o outfile\n", argv[0]);
+		printf("Usage: %s [-Z 0|1] -c file|-d file -o outfile\n", argv[0]);
 		printf("Compiled Configuration:\n LZW_MIN_CODE_WIDTH=%d, LZW_MAX_CODE_WIDTH=%d, LZW_MAX_CODES=%lu, sizeof(lzw_state)=%zu\n",
 			LZW_MIN_CODE_WIDTH,
 			LZW_MAX_CODE_WIDTH,
