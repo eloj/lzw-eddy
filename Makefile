@@ -20,6 +20,16 @@ ifdef PERF
 	TEST_PREFIX:=perf stat
 endif
 
+# GCC only
+ifdef ANALYZER
+	MISCFLAGS+=-fanalyzer
+endif
+
+# clang only
+ifdef SANITIZE
+	MISCFLAGS+=-fsanitize=memory
+endif
+
 ifdef OPTIMIZED
 # On mingw, -static avoids dep on libssp-0.dll when built with -fstack-protector
 	MISCFLAGS+=-DNDEBUG -Werror -static
