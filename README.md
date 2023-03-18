@@ -10,7 +10,8 @@ like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html
 probably due to its use in GIF. This resulted in it being used in all sorts of places.
 
 Specifically the code in this repository was written to be [bit-compatible with Puzznic](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/) (MS-DOS),
-and as such does not represent an effort to write "the best" LZW codec.
+and as such does not represent an effort to write "the best" LZW codec. If I did not have to
+adhere to this, I believe the code would be quite a bit simpler.
 
 Code developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
