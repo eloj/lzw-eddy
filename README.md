@@ -10,8 +10,7 @@ like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html
 probably due to its use in GIF. This resulted in it being used in all sorts of places.
 
 Specifically the code in this repository was written to be [bit-compatible with Puzznic](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/) (MS-DOS),
-and as such does not represent an effort to write "the best" LZW codec. If I did not have to
-adhere to this, I believe the code would be quite a bit simpler.
+and as such does not represent an effort to write "the best" LZW codec.
 
 Code developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
@@ -48,6 +47,17 @@ const char *lzw_strerror(enum lzw_errors errnum);
 
 All input is assumed to be available at `src`; e.g it is NOT allowed to switch `src` during encoding/decoding. A function
 to 'hand over' state to new input could be added, but I don't have the need.
+
+## Security
+
+I would _not_ recommend using this code in a security-sensitive context. If you expose this code
+to possibly adversarial data, beware that you do so at your own risk.
+
+I make no guarantees, provide no warranties, and may not respond to security issues in a timely manner.
+
+This code was written simply to allow interoperability with an old MS-DOS game, nothing more.
+
+Thank you and enjoy.
 
 ## Usage
 
