@@ -55,6 +55,10 @@ build_const.h: FORCE
 	else \
 		mv $@.tmp $@ ; \
 	fi
+	@if test ! -s $@ ; then \
+		echo "Bare build, no build hash available." ; \
+		echo 'const char *build_hash = "";' > $@ ; \
+	fi
 
 lzw-eddy: lzw-eddy.c lzw.h build_const.h
 	$(CC) $(CFLAGS) $< -o $@

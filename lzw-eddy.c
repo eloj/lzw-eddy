@@ -18,7 +18,11 @@ static int compress = 0;
 static size_t maxlen = 0;
 
 static void print_version(void) {
-	printf("%s <%.*s>\n", LZW_EDDY_VERSION, 8, build_hash);
+	if (build_hash && *build_hash) {
+		printf("%s <%.*s>\n", LZW_EDDY_VERSION, 8, build_hash);
+	} else {
+		printf("%s\n", LZW_EDDY_VERSION);
+	}
 }
 
 static void print_banner(void) {
