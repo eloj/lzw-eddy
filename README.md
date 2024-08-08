@@ -9,8 +9,9 @@ The algorithm implemented by this code was widely distributed in the old MS-DOS 
 like [Dr.Dobbs](https://marknelson.us/posts/1989/10/01/lzw-data-compression.html) and a popular book on compression,
 probably due to its use in GIF. This resulted in it being used in all sorts of places.
 
+There are many different and mutually incompatible ways to implement the LZW algorithm.
 Specifically the code in this repository was written to be [bit-compatible with Puzznic](https://www.giantbomb.com/profile/eloj/blog/technical-notes-on-the-level-format-of-puzznic-for/114881/) (MS-DOS),
-and as such does not represent an effort to write "the best" LZW codec.
+and as such does not represent an effort to write "the best" or "most compatible" LZW codec.
 
 Code developed using the note "[LZW and GIF explained](https://www.eecis.udel.edu/~amer/CISC651/lzw.and.gif.explained.html)"
 by Steve Blackstock as a reference.
