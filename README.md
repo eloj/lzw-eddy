@@ -1,6 +1,9 @@
 
 # Simple LZW (Lempel-Ziv-Welch) Library, Compressor & Decompressor
 
+[![release](https://img.shields.io/github/release/eloj/lzw-eddy/all.svg)](https://github.com/eloj/lzw-eddy/releases)
+[![Build status](https://github.com/eloj/lzw-eddy/workflows/build/badge.svg)](https://github.com/eloj/lzw-eddy/actions/workflows/c-cpp.yml)
+
 A single-header library and basic headerless compressor and decompressor. Supports variable length codes
 between 9 and 12 bits per default, but the upper bound is a compile-time constant that can be adjusted between
 9 and 16 bits.
@@ -17,8 +20,6 @@ Code developed using the note "[LZW and GIF explained](https://www.eecis.udel.ed
 by Steve Blackstock as a reference.
 
 All code is provided under the [MIT License](LICENSE).
-
-[![Build status](https://github.com/eloj/lzw-eddy/workflows/build/badge.svg)](https://github.com/eloj/lzw-eddy/actions/workflows/c-cpp.yml)
 
 ## Features
 
