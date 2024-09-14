@@ -1,7 +1,8 @@
 
 # Simple LZW (Lempel-Ziv-Welch) Library, Compressor & Decompressor
 
-[![release](https://img.shields.io/github/release/eloj/lzw-eddy/all.svg)](https://github.com/eloj/lzw-eddy/releases)
+[![License](https://img.shields.io/github/license/eloj/lzw-eddy)](LICENSE)
+[![Release](https://img.shields.io/github/release/eloj/lzw-eddy/all.svg)](https://github.com/eloj/lzw-eddy/releases)
 [![Build status](https://github.com/eloj/lzw-eddy/workflows/build/badge.svg)](https://github.com/eloj/lzw-eddy/actions/workflows/c-cpp.yml)
 
 A single-header library and basic headerless compressor and decompressor. Supports variable length codes
