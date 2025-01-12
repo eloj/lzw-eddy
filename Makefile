@@ -1,11 +1,19 @@
-#ARCH:=x86-64-v3 ; github `ubuntu-latest` compiler too old. <sigh>
-ARCH:=native
-OPT=-O3 -fomit-frame-pointer -funroll-loops -fstrict-aliasing -march=$(ARCH) -mtune=native -msse4.2 -mavx
-LTOFLAGS=-flto -fno-fat-lto-objects -fuse-linker-plugin
+OPT=-O3 -fomit-frame-pointer -funroll-loops -fstrict-aliasing -march=native -mtune=native
 WARNFLAGS=-Wall -Wextra -Wshadow -Wstrict-aliasing -Wcast-qual -Wcast-align -Wpointer-arith -Wredundant-decls -Wfloat-equal -Wswitch-enum
 CWARNFLAGS=-Wstrict-prototypes -Wmissing-prototypes
-MISCFLAGS=-fstack-protector -fcf-protection -fvisibility=hidden
+MISCFLAGS=-fvisibility=hidden -fstack-protector
 DEVFLAGS=-ggdb -DDEBUG -D_FORTIFY_SOURCE=3 -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function
+
+#
+# Some architecture specific flags
+#
+ARCH:=$(shell uname -m)
+ifeq ($(ARCH),x86_64)
+ARCHFLAGS=-fcf-protection -msse4.2 -mavx
+endif
+ifeq ($(ARCH),aarch64)
+ARCHFLAGS=-mbranch-protection=bti
+endif
 
 AFLCC?=afl-clang-fast
 
@@ -39,8 +47,8 @@ endif
 
 BITWIDTH?=12
 
-CFLAGS=-std=c11 $(OPT) $(CWARNFLAGS) $(WARNFLAGS) $(MISCFLAGS) -DLZW_MAX_CODE_WIDTH=$(BITWIDTH)
-CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(MISCFLAGS)
+CFLAGS=-std=c11 $(OPT) $(CWARNFLAGS) $(WARNFLAGS) $(ARCHFLAGS) $(MISCFLAGS) -DLZW_MAX_CODE_WIDTH=$(BITWIDTH)
+CXXFLAGS=-std=gnu++17 -fno-rtti $(OPT) $(WARNFLAGS) $(ARCHFLAGS) $(MISCFLAGS)
 
 .PHONY: clean test fuzz
 
