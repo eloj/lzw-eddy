@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <assert.h>
-#include <stdbool.h>
 #include <errno.h>
 
 #include "build_const.h"

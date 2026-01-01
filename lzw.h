@@ -1,6 +1,6 @@
 /*
 	Variable-length code LZW compressor and decompressor for fixed-memory decoding.
-	Copyright (c) 2020-2022, Eddy L O Jansson. Licensed under The MIT License.
+	Copyright (c) 2020-2026, Eddy Jansson. Licensed under The MIT License.
 
 	See https://github.com/eloj/lzw-eddy
 */
@@ -9,7 +9,9 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#if __STDC_VERSION__ < 202311l
 #include <stdbool.h>
+#endif
 
 #if defined(_MSC_VER)
 #include <BaseTsd.h>
@@ -116,7 +118,7 @@ ssize_t lzw_compress(struct lzw_state *state, uint8_t *src, size_t slen, uint8_t
 
 /*
 	Variable-length code LZW compressor and decompressor for fixed-memory decoding.
-	Copyright (c) 2020-2022, Eddy L O Jansson. Licensed under The MIT License.
+	Copyright (c) 2020-2026, Eddy Jansson. Licensed under The MIT License.
 
 	See https://github.com/eloj/lzw-eddy
 */
