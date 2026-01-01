@@ -21,9 +21,9 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #define LZW_EDDY_MAJOR_VERSION 1
-#define LZW_EDDY_MINOR_VERSION 1
-#define LZW_EDDY_PATCH_VERSION 0
-#define LZW_EDDY_VERSION "1.1.0-dev"
+#define LZW_EDDY_MINOR_VERSION 0
+#define LZW_EDDY_PATCH_VERSION 1
+#define LZW_EDDY_VERSION "1.0.1"
 
 #define LZW_MIN_CODE_WIDTH 9
 // 9 to 16-bit codes should all work, but 12 is the default for a reason.
