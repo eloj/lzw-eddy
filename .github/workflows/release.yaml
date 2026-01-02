@@ -12,9 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-        with:
-            fetch-depth: 0
+        uses: actions/checkout@v6
       - name: Build linux package
         run: ./package.sh linux
       - name: Create release

@@ -1,10 +1,10 @@
 # LZW single-header library
 
-Stable releases have even minor version (e.g 1.0.x, 1.2.x), odd numbered minors are development versions.
+## Release 1.0.1 - 2026-01-01
 
-## Release 1.1.0-dev - next
-
+* Builds on ARM64 (tested on RaspberryPi 5)
 * Now works on Microsoft's compiler (v19.32.31332)
+* Years of tiny updates
 
 ## Release 1.0.0 - 2022-06-19
 
