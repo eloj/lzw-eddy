@@ -67,36 +67,41 @@ static int parse_args(int argc, char **argv) {
 	return 0;
 }
 
-static void lzw_compress_file(const char *srcfile, const char *destfile) {
+static int lzw_compress_file(const char *srcfile, const char *destfile) {
 	FILE *ifile = fopen(srcfile, "rb");
 
 	if (!ifile) {
 		fprintf(stderr, "Error: %m\n");
-		return;
+		return -1;
 	}
+
 	fseek(ifile, 0, SEEK_END);
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
 	printf("Compressing %zu bytes.\n", (size_t)slen);
+
+	uint8_t *src = malloc(slen + 1);
+	if (!src) {
+		fprintf(stderr, "ERROR: memory allocation of %ld bytes failed.\n", slen);
+		return -1;
+	}
+
+	if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
+		fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
+		return -1;
+	}
+	fclose(ifile);
+
 	FILE *ofile = fopen(destfile, "wb");
 	if (ofile) {
-		uint8_t *src = malloc(slen);
-		if (!src) {
-			fprintf(stderr, "ERROR: memory allocation of %ld bytes failed.\n", slen);
-			exit(1);
-		}
 		uint8_t dest[4096];
 
 		struct lzw_state state = { 0 };
+
 		if (maxlen > 0) {
 			state.longest_prefix_allowed = maxlen;
 			printf("WARNING: Restricting maximum prefix length to %zu.\n", state.longest_prefix_allowed);
-		}
-
-		if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
-			fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
-			exit(EXIT_FAILURE);
 		}
 
 		ssize_t res, written = 0;
@@ -116,74 +121,85 @@ static void lzw_compress_file(const char *srcfile, const char *destfile) {
 		free(src);
 	} else {
 		fprintf(stderr, "Error: %m\n");
+		return -1;
 	}
-	fclose(ifile);
+	return 0;
 }
 
-static void lzw_decompress_file(const char *srcfile, const char *destfile) {
+static int lzw_decompress_file(const char *srcfile, const char *destfile) {
 	FILE *ifile = fopen(srcfile, "rb");
 
 	if (!ifile) {
 		fprintf(stderr, "Error: %m\n");
-		return;
+		return -1;
 	}
+
 	fseek(ifile, 0, SEEK_END);
 	long slen = ftell(ifile);
 	fseek(ifile, 0, SEEK_SET);
 
-	if (slen > 0) {
-		printf("Decompressing %zu bytes.\n", (size_t)slen);
-		FILE *ofile = stdout;
-		if (strcmp(destfile, "-") != 0) {
-			ofile = fopen(destfile, "wb");
-		}
-		if (ofile) {
-			uint8_t dest[4096];
-			size_t dest_len = sizeof(dest);
-			if (maxlen > 0 && maxlen + 1 < dest_len) {
-				dest_len = maxlen + 1;
-				printf("WARNING: Restricting output buffer to %zu bytes.\n", dest_len);
-			}
-			uint8_t *src = malloc(slen);
-			if (!src) {
-				fprintf(stderr, "ERROR: memory allocation of %ld bytes failed.\n", slen);
-				exit(1);
-			}
+	if (slen < 3) {
+		fprintf(stderr, "WARNING: Input file is too small, no output generated.\n");
+		return -1;
+	}
 
-			if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
-				fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
-				exit(EXIT_FAILURE);
-			}
+	printf("Decompressing %zu bytes.\n", (size_t)slen);
 
-			struct lzw_state state = { 0 };
+	uint8_t *src = malloc(slen);
+	if (!src) {
+		fprintf(stderr, "ERROR: memory allocation of %ld bytes failed.\n", slen);
+		return -1;
+	}
 
-			ssize_t res, written = 0;
-			// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.
-			while ((res = lzw_decompress(&state, src, slen, dest, dest_len)) > 0) {
-				fwrite(dest, res, 1, ofile);
-				written += res;
-			}
-			if (res == 0) {
-				printf("%zd bytes written to output, expansion=%2.2f%% (longest prefix=%zu).\n",
-					written,
-					((float)written/slen - 1.0f) * 100.0f,
-					state.longest_prefix);
-			} else if (res < 0) {
-				fprintf(stderr, "Decompression returned error: %s (err: %zd)\n", lzw_strerror(res), res);
-			}
-			fclose(ofile);
-			free(src);
-		} else {
-			fprintf(stderr, "Error: %m\n");
-		}
+	if ((fread(src, slen, 1, ifile) != 1) && (ferror(ifile) != 0)) {
+		fprintf(stderr, "fread '%s': %s", srcfile, strerror(errno));
+		return -1;
 	}
 	fclose(ifile);
+
+	FILE *ofile = stdout;
+	if (strcmp(destfile, "-") != 0) {
+		ofile = fopen(destfile, "wb");
+	}
+	if (ofile) {
+		uint8_t dest[4096];
+		size_t dest_len = sizeof(dest);
+		if (maxlen > 0 && maxlen + 1 < dest_len) {
+			dest_len = maxlen + 1;
+			printf("WARNING: Restricting output buffer to %zu bytes.\n", dest_len);
+		}
+
+		struct lzw_state state = { 0 };
+
+		ssize_t res, written = 0;
+		// Returns 0 when done, otherwise number of bytes written to destination buffer. On error, < 0.
+		while ((res = lzw_decompress(&state, src, slen, dest, dest_len)) > 0) {
+			fwrite(dest, res, 1, ofile);
+			written += res;
+		}
+		if (res == 0) {
+			printf("%zd bytes written to output, expansion=%2.2f%% (longest prefix=%zu).\n",
+				written,
+				((float)written/slen - 1.0f) * 100.0f,
+				state.longest_prefix);
+		} else if (res < 0) {
+			fprintf(stderr, "Decompression returned error: %s (err: %zd)\n", lzw_strerror(res), res);
+		}
+		fclose(ofile);
+		free(src);
+	} else {
+		fprintf(stderr, "Error: %m\n");
+		return -1;
+	}
+	return 0;
 }
 
 int main(int argc, char *argv []) {
 	parse_args(argc, argv);
 
 	print_banner();
+
+	int res = 0;
 
 	if (!infile || !outfile) {
 		printf("Usage: %s -c file|-d file -o outfile\n", argv[0]);
@@ -193,14 +209,13 @@ int main(int argc, char *argv []) {
 			LZW_MAX_CODES,
 			sizeof(struct lzw_state)
 		);
-		return EXIT_SUCCESS;
-	}
-
-	if (compress) {
-		lzw_compress_file(infile, outfile);
 	} else {
-		lzw_decompress_file(infile, outfile);
+		if (compress) {
+			res = lzw_compress_file(infile, outfile);
+		} else {
+			res = lzw_decompress_file(infile, outfile);
+		}
 	}
 
-	return EXIT_SUCCESS;
+	return res == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
