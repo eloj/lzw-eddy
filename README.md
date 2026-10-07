@@ -125,6 +125,7 @@ Compressing 'lzw.h', 14566 bytes.
 
 ## Unlikely To Do
 
+* Releases. I had them, but they invite clankers so they're gone.
 * Add Google Benchmark.
 * Use hashing for lookups in `lzw_string_table_lookup`.
 * Support changing inputs during processing.
