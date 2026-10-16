@@ -1,4 +1,4 @@
-OPT=-O3 -fomit-frame-pointer -funroll-loops -fstrict-aliasing -march=native -mtune=native
+OPT=-O3 -funroll-loops -fstrict-aliasing -march=native -mtune=native
 WARNFLAGS=-Wall -Wextra -Wshadow -Wstrict-aliasing -Wcast-qual -Wcast-align -Wpointer-arith -Wredundant-decls -Wfloat-equal -Wswitch-enum
 CWARNFLAGS=-Wstrict-prototypes -Wmissing-prototypes
 MISCFLAGS=-fvisibility=hidden -fstack-protector

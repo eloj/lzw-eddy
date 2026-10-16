@@ -2,7 +2,6 @@
 # Simple LZW (Lempel-Ziv-Welch) Library, Compressor & Decompressor
 
 [![License](https://img.shields.io/github/license/eloj/lzw-eddy)](LICENSE)
-[![Release](https://img.shields.io/github/release/eloj/lzw-eddy/all.svg)](https://github.com/eloj/lzw-eddy/releases)
 [![Build status](https://github.com/eloj/lzw-eddy/workflows/build/badge.svg)](https://github.com/eloj/lzw-eddy/actions/workflows/c-cpp.yml)
 
 A single-header library and basic headerless compressor and decompressor. Supports variable length codes
@@ -83,8 +82,8 @@ some window, but no such adaptability is present.
 `lzw-eddy` is a simple command-line compressor built using the library.
 
 ```bash
-lzw-eddy 1.1.0-dev <45bf69f1>
-Usage: ./lzw-eddy -c file|-d file -o outfile
+lzw-eddy 1.0.2 <5949cf69>
+Usage: /home/eddy/bin/lzw-eddy -c file|-d file -o outfile
 Compiled Configuration:
  LZW_MIN_CODE_WIDTH=9, LZW_MAX_CODE_WIDTH=12, LZW_MAX_CODES=4096, sizeof(lzw_state)=16440
 ```
@@ -93,9 +92,9 @@ You can pass BITWIDTH=\<num\> to build it with a non-default string table size.
 
 ```bash
 $ make -B BITWIDTH=14 && ./lzw-eddy -c lzw.h -o /dev/null
-lzw-eddy 1.1.0-dev <45bf69f1>
-Compressing 'lzw.h', 14566 bytes.
-6947 bytes written to output, reduction=52.31% (longest prefix=15).
+lzw-eddy 1.0.2 <5949cf69>
+Compressing 14724 bytes.
+7030 bytes written to output, reduction=52.25% (longest prefix=16).
 ```
 
 ## Example
